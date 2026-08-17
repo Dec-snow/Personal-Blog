@@ -1,0 +1,37 @@
+node_modules/
+dist/
+public/
+!main/public/
+main/public/**
+!main/public/assets/
+!main/public/assets/moments/
+!main/public/assets/moments/**
+!main/public/showcase/
+!main/public/showcase/**
+!main/public/web/
+!main/public/web/**
+!main/public/manifest.webmanifest
+!main/public/pwa-icon.svg
+!main/public/pwa-icon-192.png
+!main/public/pwa-icon-512.png
+!main/public/pwa-icon.ico
+!main/public/sw.js
+!main/public/about-preview.html
+**/node_modules/
+**/.cache/
+cos_upload.py
+blog/cos_upload.py
+build/cos_upload.py
+acg-api/data/
+acg-api/acg-api
+acg-api/acg-api.exe
+acg-api/test_bili.py
+acg-api/.env
+
+# Temporary files & caches
+.tmp/
+.claude/
+**/__pycache__/
+
+# Build artifacts
+main/blog-dist.zip
