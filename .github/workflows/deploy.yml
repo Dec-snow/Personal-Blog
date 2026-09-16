@@ -79,12 +79,6 @@ jobs:
           npm run clean
           npm run build
 
-      - name: Build build (Vite)
-        run: |
-          cd build
-          npm ci
-          npm run build
-
       - name: Setup SSH key
         run: |
           mkdir -p ~/.ssh
@@ -99,10 +93,9 @@ jobs:
       - name: Upload artifacts to remote tmp
         run: |
           SSH_PORT="${UCLOUD_PORT:-22}"
-          ssh -p "$SSH_PORT" "$UCLOUD_USER@$UCLOUD_HOST" "mkdir -p $TMP_DIR/main $TMP_DIR/blog $TMP_DIR/build $TMP_DIR/acg-api $TMP_DIR/ai-assistant"
+          ssh -p "$SSH_PORT" "$UCLOUD_USER@$UCLOUD_HOST" "mkdir -p $TMP_DIR/main $TMP_DIR/blog $TMP_DIR/acg-api $TMP_DIR/ai-assistant"
           rsync -az --delete -e "ssh -p $SSH_PORT" main/dist/ "$UCLOUD_USER@$UCLOUD_HOST:$TMP_DIR/main/"
           rsync -az --delete -e "ssh -p $SSH_PORT" blog/public/ "$UCLOUD_USER@$UCLOUD_HOST:$TMP_DIR/blog/"
-          rsync -az --delete -e "ssh -p $SSH_PORT" build/dist/ "$UCLOUD_USER@$UCLOUD_HOST:$TMP_DIR/build/"
           rsync -az -e "ssh -p $SSH_PORT" shared/ai-assistant/ "$UCLOUD_USER@$UCLOUD_HOST:$TMP_DIR/ai-assistant/"
           scp -P "$SSH_PORT" \
             acg-api/acg-api \
@@ -312,10 +305,9 @@ jobs:
               sudo "\$@"
             fi
           }
-          run_sudo mkdir -p $ROOT_DIR $ROOT_DIR/blog $ROOT_DIR/build $ROOT_DIR/ai-assistant
+          run_sudo mkdir -p $ROOT_DIR $ROOT_DIR/blog $ROOT_DIR/ai-assistant
           run_sudo rsync -a --delete $TMP_DIR/main/ $ROOT_DIR/
           run_sudo rsync -a --delete $TMP_DIR/blog/ $ROOT_DIR/blog/
-          run_sudo rsync -a --delete $TMP_DIR/build/ $ROOT_DIR/build/
           run_sudo rsync -a $TMP_DIR/ai-assistant/ $ROOT_DIR/ai-assistant/
           run_sudo nginx -t
           run_sudo systemctl reload-or-restart nginx || {
@@ -340,5 +332,4 @@ jobs:
           curl -sf --max-time 20 https://hoarfrost.cloud/api/v1/health | grep -q '"status":"ok"'
           curl -fL --max-time 20 https://hoarfrost.cloud/ > /dev/null
           curl -fL --max-time 20 https://hoarfrost.cloud/blog/ > /dev/null
-          curl -fL --max-time 20 https://hoarfrost.cloud/build/ > /dev/null
           curl -fL --max-time 20 https://hoarfrost.cloud/bili > /dev/null
