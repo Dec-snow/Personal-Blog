@@ -28,6 +28,9 @@ go build -o acg-api .
 | `TENCENT_COS_BUCKET` | COS 存储桶名 | `my-blog-static-1464122491` |
 | `TENCENT_COS_REGION` | COS 区域 | `ap-guangzhou` |
 | `TENCENT_COS_BASE_URL` | COS 访问域名 | `https://my-blog-static-1464122491.cos.ap-guangzhou.myqcloud.com` |
+| `DEEPSEEK_API_KEY` | DeepSeek API 密钥 | - |
+| `DEEPSEEK_BASE_URL` | DeepSeek API 地址 | `https://api.deepseek.com` |
+| `DEEPSEEK_MODEL` | 聊天模型 | `deepseek-chat` |
 
 ## API 端点
 
@@ -38,6 +41,8 @@ go build -o acg-api .
 | GET | `/api/v1/health` | 健康检查 |
 | GET | `/api/server/info` | 服务器状态监控 |
 | GET | `/api/moments` | 获取随笔列表 |
+| GET | `/api/chat` | 获取聊天配额 |
+| POST | `/api/chat` | AI 聊天（DeepSeek） |
 
 ### 认证接口
 

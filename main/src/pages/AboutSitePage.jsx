@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { rewriteAboutPreviewAssets } from "./aboutPreviewAssets.js";
 
 const ABOUT_PREVIEW_URL = "/about-preview.html";
-const ABOUT_PREVIEW_VERSION = "20260809-remove-youtube";
+const ABOUT_PREVIEW_VERSION = "20260902-study-cover";
 
 const getAboutPreviewUrl = () =>
   `${ABOUT_PREVIEW_URL}?${new URLSearchParams({ v: ABOUT_PREVIEW_VERSION })}`;
@@ -120,6 +120,7 @@ const wireProjectCards = (root) => {
 const wireGameShelf = (root) => {
   const shelf = root.querySelector(".game-shelf");
   if (!shelf) return () => {};
+
   let raf = null;
   const onMove = (event) => {
     const rect = shelf.getBoundingClientRect();
@@ -137,10 +138,60 @@ const wireGameShelf = (root) => {
   };
   shelf.addEventListener("mousemove", onMove);
   shelf.addEventListener("mouseleave", onLeave);
+
+  // —— 点击游戏卡片放大查看 ——
+  const lightbox = document.createElement("div");
+  lightbox.className = "game-lightbox";
+  lightbox.innerHTML = `
+    <button class="lightbox-close" aria-label="关闭">&times;</button>
+    <img src="" alt="" />
+    <span class="lightbox-label"></span>
+  `;
+  root.appendChild(lightbox);
+
+  const lightboxImg = lightbox.querySelector("img");
+  const lightboxLabel = lightbox.querySelector(".lightbox-label");
+  const closeBtn = lightbox.querySelector(".lightbox-close");
+
+  const openLightbox = (src, alt) => {
+    lightboxImg.src = src;
+    lightboxImg.alt = alt || "";
+    lightboxLabel.textContent = alt || "";
+    lightbox.classList.add("open");
+  };
+  const closeLightbox = () => {
+    lightbox.classList.remove("open");
+  };
+
+  const onSlotClick = (event) => {
+    const slot = event.target.closest(".game-slot");
+    if (!slot) return;
+    const img = slot.querySelector(".slot-image");
+    if (!img) return;
+    event.preventDefault();
+    openLightbox(img.src, img.alt);
+  };
+  const onLightboxClick = (event) => {
+    if (event.target === lightbox || event.target === closeBtn) {
+      closeLightbox();
+    }
+  };
+  const onKeydown = (event) => {
+    if (event.key === "Escape") closeLightbox();
+  };
+
+  shelf.addEventListener("click", onSlotClick);
+  lightbox.addEventListener("click", onLightboxClick);
+  document.addEventListener("keydown", onKeydown);
+
   return () => {
     if (raf) cancelAnimationFrame(raf);
     shelf.removeEventListener("mousemove", onMove);
     shelf.removeEventListener("mouseleave", onLeave);
+    shelf.removeEventListener("click", onSlotClick);
+    lightbox.removeEventListener("click", onLightboxClick);
+    document.removeEventListener("keydown", onKeydown);
+    lightbox.remove();
   };
 };
 

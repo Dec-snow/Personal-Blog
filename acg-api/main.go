@@ -54,6 +54,7 @@ func main() {
 	mux.HandleFunc("/api/auth/", authHandler)
 	mux.HandleFunc("/api/owner/", ownerRouter)
 	mux.HandleFunc("/api/moments", momentsPublicHandler)
+	mux.HandleFunc("/api/chat", chatHandler)
 
 	log.Printf("acg-api on %s\n", addr)
 

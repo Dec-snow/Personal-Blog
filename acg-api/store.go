@@ -54,6 +54,12 @@ func migrateAll(db *sql.DB) error {
 			created_at TEXT NOT NULL
 		);`,
 		`CREATE INDEX IF NOT EXISTS idx_moments_sort ON moments(sort_order DESC, id DESC);`,
+		`CREATE TABLE IF NOT EXISTS chat_quota (
+			user_key TEXT NOT NULL,
+			date TEXT NOT NULL,
+			used INTEGER NOT NULL DEFAULT 0,
+			PRIMARY KEY (user_key, date)
+		);`,
 	}
 	for _, s := range stmts {
 		if _, err := db.Exec(s); err != nil {
