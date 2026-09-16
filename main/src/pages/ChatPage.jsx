@@ -123,14 +123,14 @@ const ChatPage = () => {
     : `${quota.remaining}/${quota.limit}`;
 
   return (
-    <div className="flex min-h-screen flex-col bg-[linear-gradient(180deg,#1a1330_0%,#241322_40%,#1a1330_100%)]">
+    <div className="flex min-h-screen flex-col bg-[linear-gradient(180deg,#fff8f1_0%,#ffeef5_48%,#f6fbff_100%)]">
       {/* Header */}
       <header className="flex items-center justify-between px-5 pt-24 pb-4 md:px-10 md:pt-28">
         <div>
-          <p className="font-mono text-[10px] uppercase tracking-[0.4em] text-pink-100/60">
+          <p className="font-mono text-[10px] uppercase tracking-[0.4em] text-[#b8a8af]">
             AI Assistant
           </p>
-          <h1 className="mt-2 text-2xl font-black text-[#ffe7ef] md:text-3xl">
+          <h1 className="mt-2 text-2xl font-black text-[#241322] md:text-3xl">
             博客小精灵
           </h1>
         </div>
@@ -138,18 +138,18 @@ const ChatPage = () => {
           <span
             className={`rounded-full border px-3 py-1 text-xs font-semibold ${
               quota.chatEnabled
-                ? "border-green-400/30 bg-green-400/10 text-green-300"
-                : "border-red-400/30 bg-red-400/10 text-red-300"
+                ? "border-[#ff8fab]/30 bg-[#ff8fab]/10 text-[#b76e79]"
+                : "border-red-400/30 bg-red-400/10 text-red-500"
             }`}
           >
             {quota.chatEnabled ? "在线" : "未配置"}
           </span>
-          <span className="rounded-full border border-white/15 bg-white/8 px-3 py-1 text-xs text-blue-50/70">
+          <span className="rounded-full border border-[#ff8fab]/20 bg-white/60 px-3 py-1 text-xs text-[#8a7680]">
             今日剩余 {remainingText}
           </span>
           <Link
             to="/"
-            className="rounded-full border border-white/15 bg-white/8 px-4 py-1 text-xs font-semibold text-blue-50/80 transition hover:bg-white/15"
+            className="rounded-full border border-[#ff8fab]/20 bg-white/60 px-4 py-1 text-xs font-semibold text-[#5f4b52] transition hover:bg-white/90"
           >
             返回首页
           </Link>
@@ -167,7 +167,7 @@ const ChatPage = () => {
             <MessageBubble key={i} msg={msg} />
           ))}
           {sending && (
-            <div className="flex items-center gap-2 text-blue-50/50">
+            <div className="flex items-center gap-2 text-[#b8a8af]">
               <div className="three-body">
                 <div className="three-body__dot" />
                 <div className="three-body__dot" />
@@ -180,9 +180,9 @@ const ChatPage = () => {
       </div>
 
       {/* Input */}
-      <div className="border-t border-white/8 bg-[#241322]/80 px-4 py-4 backdrop-blur-md md:px-10">
+      <div className="border-t border-[#ff8fab]/12 bg-[#fffaf3]/80 px-4 py-4 backdrop-blur-md md:px-10">
         <div className="mx-auto flex max-w-3xl items-end gap-3">
-          <div className="flex flex-1 items-end rounded-2xl border border-white/12 bg-white/6 px-4 py-2.5">
+          <div className="flex flex-1 items-end rounded-2xl border border-[#ff8fab]/15 bg-white/70 px-4 py-2.5 shadow-sm">
             <textarea
               ref={inputRef}
               value={input}
@@ -191,7 +191,7 @@ const ChatPage = () => {
               rows={1}
               maxLength={MAX_LEN}
               placeholder="输入消息，Enter 发送，Shift+Enter 换行"
-              className="max-h-32 min-h-[24px] flex-1 resize-none bg-transparent text-sm leading-relaxed text-[#ffe7ef] placeholder:text-blue-50/30 focus:outline-none"
+              className="max-h-32 min-h-[24px] flex-1 resize-none bg-transparent text-sm leading-relaxed text-[#241322] placeholder:text-[#b8a8af] focus:outline-none"
               style={{
                 height: "auto",
                 overflow: input.length > 80 ? "auto" : "hidden",
@@ -201,14 +201,14 @@ const ChatPage = () => {
                 e.target.style.height = Math.min(e.target.scrollHeight, 128) + "px";
               }}
             />
-            <span className="ml-2 shrink-0 text-[10px] text-blue-50/30">
+            <span className="ml-2 shrink-0 text-[10px] text-[#b8a8af]">
               {input.length}/{MAX_LEN}
             </span>
           </div>
           <button
             onClick={send}
             disabled={!input.trim() || sending || !quota.chatEnabled}
-            className="flex h-12 shrink-0 items-center gap-2 rounded-2xl bg-[#ffe7ef] px-5 text-sm font-bold text-[#241322] transition disabled:cursor-not-allowed disabled:opacity-30"
+            className="flex h-12 shrink-0 items-center gap-2 rounded-2xl bg-[#241322] px-5 text-sm font-bold text-[#fffaf3] transition hover:bg-[#3a1f33] disabled:cursor-not-allowed disabled:opacity-30"
           >
             <TiLocationArrow />
             发送
@@ -227,25 +227,25 @@ const MessageBubble = ({ msg }) => {
   return (
     <div className={`flex ${isUser ? "justify-end" : "justify-start"}`}>
       {!isUser && (
-        <div className="mr-3 mt-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[#FF6BAA] to-[#7C5CFF] text-xs font-bold text-white">
+        <div className="mr-3 mt-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[#ff8fab] to-[#7c5cff] text-xs font-bold text-white shadow-sm">
           精
         </div>
       )}
       <div
-        className={`max-w-[78%] rounded-2xl px-4 py-3 text-sm leading-relaxed ${
+        className={`max-w-[78%] rounded-2xl px-4 py-3 text-sm leading-relaxed shadow-sm ${
           isUser
-            ? "bg-[#ffe7ef] text-[#241322]"
+            ? "bg-[#241322] text-[#fffaf3]"
             : isError
-              ? "border border-red-400/25 bg-red-400/8 text-red-200"
+              ? "border border-red-300/40 bg-red-50 text-red-600"
               : isWelcome
-                ? "border border-pink-300/20 bg-pink-300/8 text-pink-100"
-                : "border border-white/10 bg-white/6 text-blue-50/90"
+                ? "border border-[#ff8fab]/25 bg-[#ff8fab]/8 text-[#b76e79]"
+                : "border border-[#ff8fab]/12 bg-white/70 text-[#241322]"
         }`}
       >
         <p className="whitespace-pre-wrap break-words">{msg.content}</p>
       </div>
       {isUser && (
-        <div className="ml-3 mt-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white/12 text-xs font-bold text-blue-50/60">
+        <div className="ml-3 mt-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#241322] text-xs font-bold text-[#fffaf3]">
           我
         </div>
       )}
