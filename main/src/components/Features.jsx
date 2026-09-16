@@ -100,12 +100,12 @@ const ARCHIVE_ITEMS = [
   },
   {
     index: "03",
-    title: "创造纪事",
-    subtitle: "进入实验室",
+    title: "博客小精灵",
+    subtitle: "开始聊天",
     src: `${COS}/Home/片段03.jpg`,
-    note: "记录这个网站从想法到落地的搭建过程，也把一路上的调整与打磨慢慢收进来。",
-    linkUrl: "/build",
-    linkText: "进入实验室",
+    note: "和 AI 小精灵聊聊天，问问题、闲聊都行，它随时等着你。",
+    linkUrl: "/chat",
+    linkText: "开始聊天",
   },
   {
     index: "04",
@@ -458,12 +458,12 @@ const Features = () => {
               index="03"
               title={
                 <>
-                  创造纪事
+                  博客小精灵
                 </>
               }
-              description="这里收着这个网站一路搭起来的过程，页面怎么改、交互怎么调、细节怎么慢慢磨出来，都会安静记在这里。"
-              linkUrl="/build"
-              linkText="进入实验室"
+              description="和 AI 小精灵聊聊天，问问题、闲聊都行，它随时等着你。"
+              linkUrl="/chat"
+              linkText="开始聊天"
             />
           </ExhibitTilt>
 

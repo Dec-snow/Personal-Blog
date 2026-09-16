@@ -21,7 +21,7 @@ const GalleryPage = lazy(() => import("./pages/GalleryPage"));
 const MomentsPage = lazy(() => import("./pages/MomentsPage"));
 const AboutSitePage = lazy(() => import("./pages/AboutSitePage"));
 const AboutProjectPage = lazy(() => import("./pages/AboutProjectPage"));
-const BuildPage = lazy(() => import("./pages/BuildPage"));
+const ChatPage = lazy(() => import("./pages/ChatPage"));
 const NotFoundPage = lazy(() => import("./pages/NotFoundPage"));
 
 const PageFallback = () => (
@@ -69,7 +69,7 @@ function App() {
               <Route path="moments" element={<MomentsPage />} />
               <Route path="about" element={<AboutSitePage />} />
               <Route path="about/projects/:projectId" element={<AboutProjectPage />} />
-              <Route path="build" element={<BuildPage />} />
+              <Route path="chat" element={<ChatPage />} />
               <Route path="login" element={<LoginPage />} />
               <Route path="*" element={<NotFoundPage />} />
             </Route>

@@ -28,7 +28,7 @@ const getNavTheme = (pathname) => {
   if (pathname === "/gallery" || pathname.startsWith("/gallery/")) return "gallery";
   if (pathname === "/moments" || pathname.startsWith("/moments/")) return "moments";
   if (pathname === "/about" || pathname.startsWith("/about/")) return "about";
-  if (pathname === "/build" || pathname.startsWith("/build/")) return "about";
+  if (pathname === "/chat" || pathname.startsWith("/chat/")) return "about";
   return "dark";
 };
 
@@ -58,15 +58,15 @@ const NavBar = () => {
     pathname === "/moments" || pathname.startsWith("/moments/");
   const isAboutPage =
     pathname === "/about" || pathname.startsWith("/about/");
-  const isBuildPage =
-    pathname === "/build" || pathname.startsWith("/build/");
+  const isChatPage =
+    pathname === "/chat" || pathname.startsWith("/chat/");
   const isSubPage =
     isBiliPage ||
     isAiTrafficPage ||
     isGalleryPage ||
     isMomentsPage ||
     isAboutPage ||
-    isBuildPage;
+    isChatPage;
   const navTheme = getNavTheme(pathname);
   const isLightNav = navTheme !== "dark";
 
