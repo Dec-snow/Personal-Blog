@@ -1,4 +1,4 @@
-﻿#!/usr/bin/env bash
+#!/usr/bin/env bash
 # Run on UCloud host (via CI SSH). Installs binary, systemd, nginx /api proxy.
 set -euo pipefail
 

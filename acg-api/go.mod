@@ -1,4 +1,4 @@
-﻿module github.com/Dec-snow/hoarfrost/acg-api
+module github.com/Dec-snow/hoarfrost/acg-api
 
 go 1.22
 

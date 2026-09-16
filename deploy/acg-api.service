@@ -1,4 +1,4 @@
-﻿[Unit]
+[Unit]
 Description=hoarfrost API (acg-api + blog AI chat)
 After=network.target
 
