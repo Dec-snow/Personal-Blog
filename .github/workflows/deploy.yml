@@ -165,12 +165,15 @@ jobs:
           SMTP_FROM_NAME: ${{ secrets.SMTP_FROM_NAME }}
           MAIL_NOTIFY_TO: ${{ secrets.MAIL_NOTIFY_TO }}
           SYNC_TRIGGER_TOKEN: ${{ secrets.SYNC_TRIGGER_TOKEN }}
+          DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
+          DEEPSEEK_BASE_URL: ${{ secrets.DEEPSEEK_BASE_URL }}
+          DEEPSEEK_MODEL: ${{ secrets.DEEPSEEK_MODEL }}
         run: |
           TENCENT_COS_SECRET_ID="${TENCENT_COS_SECRET_ID:-$LEGACY_COS_SECRET_ID}"
           TENCENT_COS_SECRET_KEY="${TENCENT_COS_SECRET_KEY:-$LEGACY_COS_SECRET_KEY}"
           TENCENT_COS_BUCKET="${TENCENT_COS_BUCKET:-$LEGACY_COS_BUCKET}"
           TENCENT_COS_REGION="${TENCENT_COS_REGION:-$LEGACY_COS_REGION}"
-          if [ -z "$AUTH_OWNER_PASSWORD" ] && [ -z "$AUTH_OWNER_SECURITY_ANSWER" ] && [ -z "$AGNES_API_KEY" ] && [ -z "$AGNES_BASE_URL" ] && [ -z "$AGNES_IMAGE_MODEL" ] && [ -z "$DASHSCOPE_API_KEY" ] && [ -z "$DASHSCOPE_BASE_URL" ] && [ -z "$AI_IMAGE_MODEL" ] && [ -z "$PEXELS_API_KEY" ] && [ -z "$PIXABAY_API_KEY" ] && [ -z "$TENCENT_COS_SECRET_ID" ] && [ -z "$TENCENT_COS_SECRET_KEY" ] && [ -z "$TENCENT_COS_BUCKET" ] && [ -z "$TENCENT_COS_REGION" ] && [ -z "$TENCENT_COS_BASE_URL" ] && [ -z "$OWNER_PUBLISH_GITHUB_TOKEN" ] && [ -z "$OWNER_PUBLISH_GITHUB_OWNER" ] && [ -z "$OWNER_PUBLISH_GITHUB_REPO" ] && [ -z "$OWNER_PUBLISH_GITHUB_BRANCH" ] && [ -z "$SMTP_HOST" ] && [ -z "$SMTP_PORT" ] && [ -z "$SMTP_USER" ] && [ -z "$SMTP_PASS" ] && [ -z "$SMTP_FROM_NAME" ] && [ -z "$MAIL_NOTIFY_TO" ] && [ -z "$SYNC_TRIGGER_TOKEN" ]; then
+          if [ -z "$AUTH_OWNER_PASSWORD" ] && [ -z "$AUTH_OWNER_SECURITY_ANSWER" ] && [ -z "$AGNES_API_KEY" ] && [ -z "$AGNES_BASE_URL" ] && [ -z "$AGNES_IMAGE_MODEL" ] && [ -z "$DASHSCOPE_API_KEY" ] && [ -z "$DASHSCOPE_BASE_URL" ] && [ -z "$AI_IMAGE_MODEL" ] && [ -z "$PEXELS_API_KEY" ] && [ -z "$PIXABAY_API_KEY" ] && [ -z "$TENCENT_COS_SECRET_ID" ] && [ -z "$TENCENT_COS_SECRET_KEY" ] && [ -z "$TENCENT_COS_BUCKET" ] && [ -z "$TENCENT_COS_REGION" ] && [ -z "$TENCENT_COS_BASE_URL" ] && [ -z "$OWNER_PUBLISH_GITHUB_TOKEN" ] && [ -z "$OWNER_PUBLISH_GITHUB_OWNER" ] && [ -z "$OWNER_PUBLISH_GITHUB_REPO" ] && [ -z "$OWNER_PUBLISH_GITHUB_BRANCH" ] && [ -z "$SMTP_HOST" ] && [ -z "$SMTP_PORT" ] && [ -z "$SMTP_USER" ] && [ -z "$SMTP_PASS" ] && [ -z "$SMTP_FROM_NAME" ] && [ -z "$MAIL_NOTIFY_TO" ] && [ -z "$SYNC_TRIGGER_TOKEN" ] && [ -z "$DEEPSEEK_API_KEY" ] && [ -z "$DEEPSEEK_BASE_URL" ] && [ -z "$DEEPSEEK_MODEL" ]; then
             echo "Skip env sync: no deployment-managed env secrets are set"
             exit 0
           fi
@@ -261,6 +264,15 @@ jobs:
           fi
           if [ -n "$SYNC_TRIGGER_TOKEN" ]; then
             printf 'SYNC_TRIGGER_TOKEN=%s\n' "$SYNC_TRIGGER_TOKEN" >> "$FRAG"
+          fi
+          if [ -n "$DEEPSEEK_API_KEY" ]; then
+            printf 'DEEPSEEK_API_KEY=%s\n' "$DEEPSEEK_API_KEY" >> "$FRAG"
+          fi
+          if [ -n "$DEEPSEEK_BASE_URL" ]; then
+            printf 'DEEPSEEK_BASE_URL=%s\n' "$DEEPSEEK_BASE_URL" >> "$FRAG"
+          fi
+          if [ -n "$DEEPSEEK_MODEL" ]; then
+            printf 'DEEPSEEK_MODEL=%s\n' "$DEEPSEEK_MODEL" >> "$FRAG"
           fi
           scp -P "$SSH_PORT" deploy/sync-auth-env.sh \
             "$UCLOUD_USER@$UCLOUD_HOST:/tmp/sync-auth-env.sh"
