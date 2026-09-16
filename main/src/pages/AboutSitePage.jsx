@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { rewriteAboutPreviewAssets } from "./aboutPreviewAssets.js";
 
 const ABOUT_PREVIEW_URL = "/about-preview.html";
-const ABOUT_PREVIEW_VERSION = "20260902-study-cover";
+const ABOUT_PREVIEW_VERSION = "20260917-chat-link";
 
 const getAboutPreviewUrl = () =>
   `${ABOUT_PREVIEW_URL}?${new URLSearchParams({ v: ABOUT_PREVIEW_VERSION })}`;
@@ -221,7 +221,9 @@ const AboutSitePage = () => {
           const link = event.target.closest?.("a[href]");
           if (!link) return;
           const href = link.getAttribute("href");
-          if (!href || !href.startsWith("/about/")) return;
+          if (!href) return;
+          const internal = href.startsWith("/about/") || href.startsWith("/chat");
+          if (!internal) return;
           event.preventDefault();
           navigate(href);
         };
