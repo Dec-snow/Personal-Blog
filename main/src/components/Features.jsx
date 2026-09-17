@@ -104,6 +104,8 @@ const ARCHIVE_ITEMS = [
     subtitle: "进入实验室",
     src: `${COS}/Home/片段03.jpg`,
     note: "记录这个网站从想法到落地的搭建过程，也把一路上的调整与打磨慢慢收进来。",
+    linkUrl: "/about",
+    linkText: "进入实验室",
   },
   {
     index: "04",
@@ -460,6 +462,8 @@ const Features = () => {
                 </>
               }
               description="这里收着这个网站一路搭起来的过程，页面怎么改、交互怎么调、细节怎么慢慢磨出来，都会安静记在这里。"
+              linkUrl="/about"
+              linkText="进入实验室"
             />
           </ExhibitTilt>
 
