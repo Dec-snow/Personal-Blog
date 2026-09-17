@@ -9,10 +9,10 @@
   var OWNER_EMAIL = "173236231@qq.com";
   var LIMIT_MSG = "今日提问次数用完啦，明天再来问我吧～";
   var IMAGE_LIMIT_MSG = "今日生图次数用完啦，明天再来画吧～";
-  var ERROR_MSG = "小精灵暂时走神了，请稍后再试～";
+  var ERROR_MSG = "助手暂时走神了，请稍后再试～";
   var IMAGE_ERROR_MSG = "生图暂时失败了，请稍后再试～";
   var NOT_CONFIGURED_MSG =
-    "小精灵还在沉睡中～站长配置 DeepSeek API Key 后就能聊天啦";
+    "助手还在沉睡中～站长配置 DeepSeek API Key 后就能聊天啦";
   var IMAGE_NOT_CONFIGURED_MSG =
     "生图还没配置 Agnes API Key，站长配好后就能用了。";
 
@@ -433,7 +433,7 @@
     ui.authModalBody.appendChild(submit);
 
     var foot = el("p", "acct-auth-foot");
-    foot.textContent = "登录用于 AI 提问额度，与博客小精灵聊天入口分离";
+    foot.textContent = "登录用于 AI 提问额度，与博客助手聊天入口分离";
     ui.authModalBody.appendChild(foot);
 
     email.focus();
@@ -622,7 +622,7 @@
     app.id = "blog-ai-panel";
     app.setAttribute("role", "dialog");
     app.setAttribute("aria-modal", "true");
-    app.setAttribute("aria-label", "博客小精灵");
+    app.setAttribute("aria-label", "博客助手");
 
     // —— 左侧栏 ——
     var aside = el("aside", "bai-aside");
@@ -631,10 +631,10 @@
     var brandMark = el("div", "bai-brand-mark");
     var logo = el("img");
     logo.src = LOGO_URL;
-    logo.alt = "博客小精灵";
+    logo.alt = "博客助手";
     brandMark.appendChild(logo);
     var brandText = el("div", "bai-brand-text");
-    brandText.appendChild(el("b", null, "博客小精灵"));
+    brandText.appendChild(el("b", null, "博客助手"));
     brandText.appendChild(el("span", null, "hoarfrost · AI"));
     brand.appendChild(brandMark);
     brand.appendChild(brandText);
@@ -686,7 +686,7 @@
 
     var topbar = el("div", "bai-topbar");
     var topTitle = el("div");
-    topTitle.appendChild(el("h2", null, "✦ 博客小精灵"));
+    topTitle.appendChild(el("h2", null, "✦ 博客助手"));
     ui.subtitle = el("p", null, "可以问我当前页面相关问题，也可以生成一张小图");
     topTitle.appendChild(ui.subtitle);
     topbar.appendChild(topTitle);

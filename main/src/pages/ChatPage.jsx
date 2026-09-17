@@ -7,7 +7,7 @@ const MAX_LEN = 2000;
 
 const WELCOME = {
   role: "assistant",
-  content: "你好呀～我是博客小精灵，有什么想聊的尽管说！",
+  content: "你好呀～我是博客助手，有什么想聊的尽管说！",
   isWelcome: true,
 };
 
@@ -16,9 +16,9 @@ const ChatPage = () => {
   const [input, setInput] = useState("");
   const [sending, setSending] = useState(false);
   const [quota, setQuota] = useState({
-    limit: 10,
+    limit: 5,
     used: 0,
-    remaining: 10,
+    remaining: 5,
     isLogin: false,
     unlimited: false,
     chatEnabled: true,
@@ -67,7 +67,7 @@ const ChatPage = () => {
         body: JSON.stringify({
           message: msg,
           pageUrl: window.location.href,
-          pageTitle: "博客小精灵",
+          pageTitle: "博客助手",
         }),
       });
 
@@ -131,7 +131,7 @@ const ChatPage = () => {
             AI Assistant
           </p>
           <h1 className="mt-2 text-2xl font-black text-[#241322] md:text-3xl">
-            博客小精灵
+            博客助手
           </h1>
         </div>
         <div className="flex items-center gap-3">
@@ -173,7 +173,7 @@ const ChatPage = () => {
                 <div className="three-body__dot" />
                 <div className="three-body__dot" />
               </div>
-              <span className="text-sm">小精灵正在思考...</span>
+              <span className="text-sm">助手正在思考...</span>
             </div>
           )}
         </div>
@@ -228,7 +228,7 @@ const MessageBubble = ({ msg }) => {
     <div className={`flex ${isUser ? "justify-end" : "justify-start"}`}>
       {!isUser && (
         <div className="mr-3 mt-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[#ff8fab] to-[#7c5cff] text-xs font-bold text-white shadow-sm">
-          精
+          助
         </div>
       )}
       <div

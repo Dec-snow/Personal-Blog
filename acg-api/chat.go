@@ -8,16 +8,24 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"strconv"
 	"strings"
 	"time"
 )
 
 const (
-	chatGuestLimit    = 10
 	chatMaxTokens     = 400
 	chatTimeout       = 30 * time.Second
 	chatMaxMessageLen = 2000
 )
+
+func chatGuestLimit() int {
+	n, err := strconv.Atoi(env("VISITOR_CHAT_LIMIT", "5"))
+	if err != nil || n <= 0 {
+		return 5
+	}
+	return n
+}
 
 type chatRequest struct {
 	Message     string          `json:"message"`
@@ -66,7 +74,7 @@ func chatHandler(w http.ResponseWriter, r *http.Request) {
 func handleChatQuota(w http.ResponseWriter, r *http.Request) {
 	isOwner, quotaKey := resolveChatIdentity(r)
 	chatEnabled := deepseekAPIKey() != ""
-	limit := chatGuestLimit
+	limit := chatGuestLimit()
 	if isOwner {
 		limit = -1
 	}
@@ -90,7 +98,7 @@ func handleChatSend(w http.ResponseWriter, r *http.Request) {
 	if apiKey == "" {
 		writeJSONStatus(w, http.StatusOK, map[string]any{
 			"error":       "CHAT_NOT_CONFIGURED",
-			"message":     "小精灵还在沉睡中～站长配置 DeepSeek API Key 后就能聊天啦",
+			"message":     "助手还在沉睡中～站长配置 DeepSeek API Key 后就能聊天啦",
 			"chatEnabled": false,
 		})
 		return
@@ -100,11 +108,11 @@ func handleChatSend(w http.ResponseWriter, r *http.Request) {
 
 	if !isOwner {
 		used := getDailyChatUsage(quotaKey)
-		if used >= chatGuestLimit {
+		if used >= chatGuestLimit() {
 			writeJSONStatus(w, http.StatusTooManyRequests, map[string]any{
 				"error":     "DAILY_LIMIT_EXCEEDED",
 				"message":   "今日提问次数用完啦，明天再来问我吧～",
-				"limit":     chatGuestLimit,
+				"limit":     chatGuestLimit(),
 				"used":      used,
 				"remaining": 0,
 				"isLogin":   false,
@@ -150,14 +158,14 @@ func handleChatSend(w http.ResponseWriter, r *http.Request) {
 		log.Printf("[chat] DeepSeek API error: %v", err)
 		writeJSONStatus(w, http.StatusServiceUnavailable, map[string]any{
 			"error":   "UPSTREAM_ERROR",
-			"message": "小精灵暂时走神了，请稍后再试～",
+			"message": "助手暂时走神了，请稍后再试～",
 		})
 		return
 	}
 
 	incrDailyChatUsage(quotaKey)
 	used := getDailyChatUsage(quotaKey)
-	limit := chatGuestLimit
+	limit := chatGuestLimit()
 	remaining := limit - used
 	if isOwner {
 		limit = -1
@@ -187,7 +195,7 @@ func resolveChatIdentity(r *http.Request) (bool, string) {
 
 func buildChatSystemPrompt(body chatRequest) string {
 	var sb strings.Builder
-	sb.WriteString("你是 hoarfrost.cloud 个人博客的 AI 助手「博客小精灵」。\n")
+	sb.WriteString("你是 hoarfrost.cloud 个人博客的 AI 助手「博客助手」。\n")
 	sb.WriteString("你的职责是帮助访客了解博客内容、回答技术问题、闲聊等。\n")
 	sb.WriteString("保持友好、简洁的回答风格，每次回复不超过 300 字。\n")
 	if body.PageTitle != "" {

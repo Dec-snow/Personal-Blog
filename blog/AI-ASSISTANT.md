@@ -1,15 +1,15 @@
-﻿# 博客 AI 小精灵
+﻿# 博客 AI 助手
 
-右下角胶囊按钮 **✦ 问问博客**，展开后与 **博客小精灵** 对话。所有对话经后端 `POST /api/chat` 转发至 **DeepSeek-v4-flash**，前端不接触 API Key。
+右下角胶囊按钮 **✦ 问问博客**，展开后与 **博客助手** 对话。所有对话经后端 `POST /api/chat` 转发至 **DeepSeek-v4-flash**，前端不接触 API Key。
 
 ## 前端（全站共用）
 
 - 静态资源：`shared/ai-assistant/` → 部署到 `https://hoarfrost.cloud/ai-assistant/`
 - 主站 `main/index.html`、`build/index.html`、博客 `_config.butterfly.yml` inject 均引用上述路径
-- 博客 **勿** 再开 Butterfly 的 Tidio/Chatra（`_config.butterfly.yml` → `chat.use` 留空），避免与全站小精灵重复
+- 博客 **勿** 再开 Butterfly 的 Tidio/Chatra（`_config.butterfly.yml` → `chat.use` 留空），避免与全站助手重复
 - 打开面板会显示 **当前页面** 标题；发消息时附带 `pageUrl`、`pageTitle` 供模型理解上下文（不抓取整页 HTML）
 
-配额展示：`今日剩余：7/10`（游客）或 `今日剩余：42/50`（登录）
+配额展示：`今日剩余：3/5`（游客）或 `今日剩余：42/50`（登录）
 
 ## 后端
 
@@ -29,6 +29,7 @@
 DEEPSEEK_API_KEY=sk-xxx
 DEEPSEEK_BASE_URL=https://api.deepseek.com
 DEEPSEEK_MODEL=deepseek-v4-flash
+VISITOR_CHAT_LIMIT=5
 ```
 
 重启：`sudo systemctl restart acg-api`
@@ -37,7 +38,7 @@ DEEPSEEK_MODEL=deepseek-v4-flash
 
 | 身份 | 每日上限 | 识别 |
 |------|----------|------|
-| 游客 | 10 | IP + User-Agent 哈希 |
+| 游客 | 5（可配置） | IP + User-Agent 哈希 |
 | 登录 | 50 | Cookie `blog_user_id` 或 Header `X-Blog-User-Id` |
 
 同一身份 **5 秒内最多 1 次** 请求。超限返回 429，**不调用 DeepSeek**。
@@ -55,7 +56,7 @@ DEEPSEEK_MODEL=deepseek-v4-flash
 
 | 身份 | 额度 |
 |------|------|
-| 游客 | 10 次/天 |
+| 游客 | 5 次/天（可配置） |
 | 普通登录 | 50 次/天 |
 | 站长 `173236231@qq.com` | 学号二次验证后 **无限** |
 
