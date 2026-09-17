@@ -100,12 +100,10 @@ const ARCHIVE_ITEMS = [
   },
   {
     index: "03",
-    title: "博客小精灵",
-    subtitle: "开始聊天",
+    title: "创造纪事",
+    subtitle: "进入实验室",
     src: `${COS}/Home/片段03.jpg`,
-    note: "和 AI 小精灵聊聊天，问问题、闲聊都行，它随时等着你。",
-    linkUrl: "/chat",
-    linkText: "开始聊天",
+    note: "记录这个网站从想法到落地的搭建过程，也把一路上的调整与打磨慢慢收进来。",
   },
   {
     index: "04",
@@ -458,12 +456,10 @@ const Features = () => {
               index="03"
               title={
                 <>
-                  博客小精灵
+                  创造纪事
                 </>
               }
-              description="和 AI 小精灵聊聊天，问问题、闲聊都行，它随时等着你。"
-              linkUrl="/chat"
-              linkText="开始聊天"
+              description="这里收着这个网站一路搭起来的过程，页面怎么改、交互怎么调、细节怎么慢慢磨出来，都会安静记在这里。"
             />
           </ExhibitTilt>
 
@@ -484,7 +480,15 @@ const Features = () => {
               <h1 className="bento-title max-w-72 text-3xl font-black leading-none md:text-5xl">
                 M<b>o</b>re co<b>m</b>ing s<b>o</b>on.
               </h1>
-              <TiLocationArrow className="m-5 scale-[5] self-end text-[#ff8fab]" />
+              <div className="flex items-end justify-end">
+                <Link
+                  to="/chat"
+                  className="flex items-center gap-1.5 rounded-full bg-[#241322] px-5 py-2 text-xs font-bold uppercase text-[#ffe7ef] transition hover:bg-[#3a1f33]"
+                >
+                  <TiLocationArrow />
+                  开始聊天
+                </Link>
+              </div>
             </div>
           </ExhibitTilt>
 
