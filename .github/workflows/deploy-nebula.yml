@@ -19,6 +19,9 @@ jobs:
       UCLOUD_SUDO_PASSWORD: ${{ secrets.UCLOUD_SUDO_PASSWORD }}
 
     steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
       - name: Setup SSH key
         run: |
           mkdir -p ~/.ssh
@@ -28,9 +31,16 @@ jobs:
           ssh-keyscan -p "$SSH_PORT" "$UCLOUD_HOST" >> ~/.ssh/known_hosts
           ssh-keyscan "$UCLOUD_HOST" >> ~/.ssh/known_hosts
 
-      - name: Deploy NebulaFlow on server
+      - name: Deploy NebulaFlow via SSH
         run: |
           SSH_PORT="${UCLOUD_PORT:-22}"
+
+          # Create tarball of nebula-dist and nginx config, pipe through SSH
+          tar czf - -C nebula-dist . | \
+            ssh -p "$SSH_PORT" "$UCLOUD_USER@$UCLOUD_HOST" \
+            "cat > /tmp/nebula-dist.tar.gz"
+
+          # Send sudo env
           REMOTE_SUDO_ENV="/tmp/nf-sudo.env"
           SUDO_ENV=$(mktemp)
           trap 'rm -f "$SUDO_ENV"' EXIT
@@ -38,30 +48,28 @@ jobs:
           printf 'export SUDO_PASSWORD=%q\n' "$UCLOUD_SUDO_PASSWORD" > "$SUDO_ENV"
           scp -P "$SSH_PORT" "$SUDO_ENV" \
             "$UCLOUD_USER@$UCLOUD_HOST:$REMOTE_SUDO_ENV"
+
+          # Send nginx config
+          scp -P "$SSH_PORT" deploy/nginx-nebula.conf \
+            "$UCLOUD_USER@$UCLOUD_HOST:/tmp/nginx-nebula.conf"
+
+          # Execute deployment on server
           ssh -p "$SSH_PORT" "$UCLOUD_USER@$UCLOUD_HOST" 'bash -se' <<REMOTE
           set -e
-          trap 'rm -f $REMOTE_SUDO_ENV' EXIT
+          trap 'rm -f $REMOTE_SUDO_ENV /tmp/nebula-dist.tar.gz /tmp/nginx-nebula.conf' EXIT
           chmod 600 $REMOTE_SUDO_ENV
           . $REMOTE_SUDO_ENV
           run_sudo() {
             printf '%s\n' "\$SUDO_PASSWORD" | sudo -S -p '' "\$@"
           }
 
-          echo "=== Pulling latest code ==="
-          if [ -d /srv/NebulaFlow ]; then
-            cd /srv/NebulaFlow
-            git fetch origin master && git reset --hard origin/master
-          else
-            git clone --depth 1 -b master https://github.com/Dec-snow/Personal-Blog.git /srv/NebulaFlow
-          fi
-
-          echo "=== Deploying NebulaFlow frontend ==="
+          echo "=== Extracting NebulaFlow frontend ==="
           run_sudo mkdir -p /var/www/nebula
-          run_sudo cp -a /srv/NebulaFlow/nebula-dist/. /var/www/nebula/
+          run_sudo tar xzf /tmp/nebula-dist.tar.gz -C /var/www/nebula/
           run_sudo chown -R www-data:www-data /var/www/nebula
 
           echo "=== Installing nginx config ==="
-          run_sudo cp /srv/NebulaFlow/deploy/nginx-nebula.conf /etc/nginx/conf.d/nebula.conf
+          run_sudo cp /tmp/nginx-nebula.conf /etc/nginx/conf.d/nebula.conf
           run_sudo nginx -t
 
           echo "=== Ensuring SSL ==="
