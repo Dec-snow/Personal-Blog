@@ -17,6 +17,8 @@ on:
       - "shared/**"
       - ".github/workflows/deploy.yml"
   workflow_dispatch:
+  schedule:
+    - cron: "0 0 * * *"
 
 jobs:
   deploy:
@@ -79,6 +81,13 @@ jobs:
           npm run clean
           npm run build
 
+      - name: Clone & build NebulaFlow frontend
+        run: |
+          git clone --depth 1 https://github.com/Dec-snow/NebulaFlow.git /tmp/nebulaflow
+          cd /tmp/nebulaflow/web-next
+          npm ci
+          npm run build
+
       - name: Setup SSH key
         run: |
           mkdir -p ~/.ssh
@@ -93,14 +102,16 @@ jobs:
       - name: Upload artifacts to remote tmp
         run: |
           SSH_PORT="${UCLOUD_PORT:-22}"
-          ssh -p "$SSH_PORT" "$UCLOUD_USER@$UCLOUD_HOST" "mkdir -p $TMP_DIR/main $TMP_DIR/blog $TMP_DIR/acg-api $TMP_DIR/ai-assistant"
+          ssh -p "$SSH_PORT" "$UCLOUD_USER@$UCLOUD_HOST" "mkdir -p $TMP_DIR/main $TMP_DIR/blog $TMP_DIR/acg-api $TMP_DIR/ai-assistant $TMP_DIR/nebula"
           rsync -az --delete -e "ssh -p $SSH_PORT" main/dist/ "$UCLOUD_USER@$UCLOUD_HOST:$TMP_DIR/main/"
           rsync -az --delete -e "ssh -p $SSH_PORT" blog/public/ "$UCLOUD_USER@$UCLOUD_HOST:$TMP_DIR/blog/"
           rsync -az -e "ssh -p $SSH_PORT" shared/ai-assistant/ "$UCLOUD_USER@$UCLOUD_HOST:$TMP_DIR/ai-assistant/"
+          rsync -az --delete -e "ssh -p $SSH_PORT" /tmp/nebulaflow/web-next/dist/ "$UCLOUD_USER@$UCLOUD_HOST:$TMP_DIR/nebula/"
           scp -P "$SSH_PORT" \
             acg-api/acg-api \
             deploy/remote-install-acg-api.sh \
             deploy/acg-api.service \
+            deploy/nginx-nebula.conf \
             "$UCLOUD_USER@$UCLOUD_HOST:$TMP_DIR/acg-api/"
 
       - name: Install acg-api and nginx /api proxy
@@ -305,10 +316,13 @@ jobs:
               sudo "\$@"
             fi
           }
-          run_sudo mkdir -p $ROOT_DIR $ROOT_DIR/blog $ROOT_DIR/ai-assistant
+          run_sudo mkdir -p $ROOT_DIR $ROOT_DIR/blog $ROOT_DIR/ai-assistant /var/www/nebula
           run_sudo rsync -a --delete $TMP_DIR/main/ $ROOT_DIR/
           run_sudo rsync -a --delete $TMP_DIR/blog/ $ROOT_DIR/blog/
           run_sudo rsync -a $TMP_DIR/ai-assistant/ $ROOT_DIR/ai-assistant/
+          run_sudo rsync -a --delete $TMP_DIR/nebula/ /var/www/nebula/
+          run_sudo cp $TMP_DIR/acg-api/nginx-nebula.conf /etc/nginx/sites-available/nebula.conf
+          run_sudo ln -sf /etc/nginx/sites-available/nebula.conf /etc/nginx/sites-enabled/nebula.conf
           run_sudo nginx -t
           run_sudo systemctl reload-or-restart nginx || {
             echo "ERROR: nginx reload-or-restart failed"
@@ -333,3 +347,5 @@ jobs:
           curl -fL --max-time 20 https://hoarfrost.cloud/ > /dev/null
           curl -fL --max-time 20 https://hoarfrost.cloud/blog/ > /dev/null
           curl -fL --max-time 20 https://hoarfrost.cloud/bili > /dev/null
+          curl -fL --max-time 20 http://nebula.hoarfrost.cloud/ > /dev/null || \
+            echo "WARN: nebula.hoarfrost.cloud not reachable yet (DNS may need time)"
