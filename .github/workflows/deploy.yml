@@ -321,6 +321,7 @@ jobs:
           run_sudo rsync -a --delete $TMP_DIR/blog/ $ROOT_DIR/blog/
           run_sudo rsync -a $TMP_DIR/ai-assistant/ $ROOT_DIR/ai-assistant/
           run_sudo rsync -a --delete $TMP_DIR/nebula/ /var/www/nebula/
+          run_sudo rm -f /etc/nginx/sites-enabled/nebula.conf /etc/nginx/sites-available/nebula.conf
           run_sudo cp $TMP_DIR/acg-api/nginx-nebula.conf /etc/nginx/conf.d/nebula.conf
           run_sudo nginx -t
           run_sudo systemctl reload-or-restart nginx || {
