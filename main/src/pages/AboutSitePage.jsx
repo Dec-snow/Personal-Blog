@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { rewriteAboutPreviewAssets } from "./aboutPreviewAssets.js";
 
 const ABOUT_PREVIEW_URL = "/about-preview.html";
-const ABOUT_PREVIEW_VERSION = "20260917-chat-link";
+const ABOUT_PREVIEW_VERSION = "20260921-nebulaflow";
 
 const getAboutPreviewUrl = () =>
   `${ABOUT_PREVIEW_URL}?${new URLSearchParams({ v: ABOUT_PREVIEW_VERSION })}`;
