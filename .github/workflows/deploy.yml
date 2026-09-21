@@ -92,20 +92,16 @@ jobs:
             ssh-keyscan "$UCLOUD_HOST" >> ~/.ssh/known_hosts
           fi
 
-      - name: Upload artifacts to remote tmp
+      - name: Upload artifacts via SSH pipe
         run: |
           SSH_PORT="${UCLOUD_PORT:-22}"
-          ssh -p "$SSH_PORT" "$UCLOUD_USER@$UCLOUD_HOST" "mkdir -p $TMP_DIR/main $TMP_DIR/blog $TMP_DIR/acg-api $TMP_DIR/ai-assistant $TMP_DIR/nebula"
-          rsync -az --delete -e "ssh -p $SSH_PORT" main/dist/ "$UCLOUD_USER@$UCLOUD_HOST:$TMP_DIR/main/"
-          rsync -az --delete -e "ssh -p $SSH_PORT" blog/public/ "$UCLOUD_USER@$UCLOUD_HOST:$TMP_DIR/blog/"
-          rsync -az -e "ssh -p $SSH_PORT" shared/ai-assistant/ "$UCLOUD_USER@$UCLOUD_HOST:$TMP_DIR/ai-assistant/"
-          rsync -az --delete -e "ssh -p $SSH_PORT" nebula-dist/ "$UCLOUD_USER@$UCLOUD_HOST:$TMP_DIR/nebula/"
-          scp -P "$SSH_PORT" \
-            acg-api/acg-api \
-            deploy/remote-install-acg-api.sh \
-            deploy/acg-api.service \
-            deploy/nginx-nebula.conf \
-            "$UCLOUD_USER@$UCLOUD_HOST:$TMP_DIR/acg-api/"
+          mkdir -p bundle/main bundle/blog bundle/acg-api bundle/ai-assistant bundle/nebula
+          cp -a main/dist/. bundle/main/
+          cp -a blog/public/. bundle/blog/
+          cp -a shared/ai-assistant/. bundle/ai-assistant/
+          cp -a nebula-dist/. bundle/nebula/
+          cp acg-api/acg-api deploy/remote-install-acg-api.sh deploy/acg-api.service deploy/nginx-nebula.conf bundle/acg-api/
+          tar czf - -C bundle . | ssh -p "$SSH_PORT" "$UCLOUD_USER@$UCLOUD_HOST" "mkdir -p $TMP_DIR && tar xzf - -C $TMP_DIR"
 
       - name: Install acg-api and nginx /api proxy
         run: |
