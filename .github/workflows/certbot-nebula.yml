@@ -32,13 +32,13 @@ jobs:
           printf 'export SUDO_PASSWORD=%q\n' "$UCLOUD_SUDO_PASSWORD" > "$SUDO_ENV"
           scp -P "$SSH_PORT" "$SUDO_ENV" \
             "$UCLOUD_USER@$UCLOUD_HOST:$REMOTE_SUDO_ENV"
-          ssh -p "$SSH_PORT" "$UCLOUD_USER@$UCLOUD_HOST" 'bash -se' <<'REMOTE'
+          ssh -p "$SSH_PORT" "$UCLOUD_USER@$UCLOUD_HOST" 'bash -se' <<REMOTE
           set -e
           trap 'rm -f $REMOTE_SUDO_ENV' EXIT
           chmod 600 $REMOTE_SUDO_ENV
           . $REMOTE_SUDO_ENV
           run_sudo() {
-            printf '%s\n' "$SUDO_PASSWORD" | sudo -S -p '' "$@"
+            printf '%s\n' "\$SUDO_PASSWORD" | sudo -S -p '' "\$@"
           }
           run_sudo certbot --nginx -d nebula.hoarfrost.cloud --non-interactive --agree-tos --register-unsafely-without-email --redirect
           run_sudo nginx -t
