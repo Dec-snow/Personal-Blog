@@ -7486,6 +7486,237 @@ body {
   text-shadow: 0 1px 0 rgba(255, 255, 255, 0.74);
 }
 
+/* ================================================================
+   Chat Page — 桜 Sakura / 二次元萌系风格
+   ================================================================ */
+
+.chat-sakura-page {
+  position: relative;
+  min-height: 100vh;
+  color: #4A4A4A;
+  overflow: hidden;
+}
+
+.chat-sakura-page .chat-sakura-avatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 183, 197, 0.5);
+  background: linear-gradient(135deg, #FFF5F8 0%, #FFE4EC 100%);
+  box-shadow: 0 4px 15px rgba(255, 183, 197, 0.3),
+              inset 0 1px 0 rgba(255, 255, 255, 0.8);
+  flex-shrink: 0;
+}
+
+/* Scrollbar */
+.chat-sakura-page ::-webkit-scrollbar {
+  width: 5px;
+}
+.chat-sakura-page ::-webkit-scrollbar-track {
+  background: transparent;
+}
+.chat-sakura-page ::-webkit-scrollbar-thumb {
+  background: rgba(255, 143, 171, 0.25);
+  border-radius: 3px;
+}
+.chat-sakura-page ::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 143, 171, 0.45);
+}
+
+/* Typing indicator - sakura style */
+.sakura-typing {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.sakura-typing__dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #FF8FAB, #FFB7C5);
+  animation: sakura-typing-bounce 1.4s ease-in-out infinite;
+}
+.sakura-typing__dot:nth-child(2) {
+  animation-delay: 0.16s;
+}
+.sakura-typing__dot:nth-child(3) {
+  animation-delay: 0.32s;
+}
+@keyframes sakura-typing-bounce {
+  0%, 80%, 100% {
+    transform: scale(0.6);
+    opacity: 0.5;
+  }
+  40% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* Float animation for avatar */
+.animate-float-slow {
+  animation: float-slow 3.5s ease-in-out infinite;
+}
+@keyframes float-slow {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
+
+/* Sparkle animation */
+.animate-sparkle {
+  animation: sparkle 2s ease-in-out infinite;
+}
+@keyframes sparkle {
+  0%, 100% {
+    opacity: 0;
+    transform: scale(0.5) rotate(0deg);
+  }
+  50% {
+    opacity: 0.9;
+    transform: scale(1) rotate(180deg);
+  }
+}
+
+/* Sakura glow animation */
+.animate-sakura-glow {
+  animation: sakura-glow 6s ease-in-out infinite;
+}
+@keyframes sakura-glow {
+  0%, 100% {
+    opacity: 0.25;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.5;
+    transform: scale(1.12);
+  }
+}
+
+/* Fade in up animation for messages */
+.animate-fade-in-up {
+  animation: fade-in-up 0.4s ease-out forwards;
+}
+@keyframes fade-in-up {
+  0% {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ================================================================
+   Owner Console — Chat Limit module
+   ================================================================ */
+
+.owner-chat-limit-card {
+  padding: 24px;
+  border-radius: 18px;
+  border: 1px solid rgba(183, 110, 121, 0.15);
+  background: rgba(255, 250, 245, 0.6);
+  backdrop-filter: blur(8px);
+}
+
+.owner-chat-limit-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.owner-chat-limit-number {
+  font-size: 2.2rem;
+  font-weight: 800;
+  color: #b76e79;
+  font-family: system-ui, -apple-system, sans-serif;
+  min-width: 52px;
+  text-align: center;
+  line-height: 1;
+}
+
+.owner-chat-limit-slider {
+  flex: 1;
+  min-width: 200px;
+  -webkit-appearance: none;
+  appearance: none;
+  height: 6px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #f0c8d2 0%, #e8a0b0 100%);
+  outline: none;
+}
+
+.owner-chat-limit-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #c97d8a, #e8a0b0);
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(183, 110, 121, 0.3);
+  transition: transform 0.15s ease;
+}
+
+.owner-chat-limit-slider::-webkit-slider-thumb:hover {
+  transform: scale(1.15);
+}
+
+.owner-chat-limit-slider::-moz-range-thumb {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #c97d8a, #e8a0b0);
+  cursor: pointer;
+  border: none;
+  box-shadow: 0 2px 8px rgba(183, 110, 121, 0.3);
+}
+
+.owner-chat-limit-btn {
+  border: none;
+  padding: 8px 20px;
+  border-radius: 10px;
+  font-size: 0.88rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  background: linear-gradient(135deg, #c97d8a, #e8a0b0);
+  color: #fff;
+}
+
+.owner-chat-limit-btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(183, 110, 121, 0.25);
+}
+
+.owner-chat-limit-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.owner-chat-limit-hint {
+  margin-top: 12px;
+  font-size: 0.78rem;
+  color: #8a7078;
+  line-height: 1.6;
+}
+
+.owner-chat-limit-stat {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 0;
+  border-bottom: 1px solid rgba(183, 110, 121, 0.08);
+}
+
+.owner-chat-limit-stat:last-child {
+  border-bottom: none;
+}
+
 .moments-card--aurora {
   --moment-accent: 255, 160, 202;
   --moment-holo: var(--moment-holo-rose);
