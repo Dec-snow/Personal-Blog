@@ -6,23 +6,33 @@ on:
 jobs:
   certbot:
     runs-on: ubuntu-latest
+    env:
+      UCLOUD_HOST: ${{ secrets.UCLOUD_HOST }}
+      UCLOUD_PORT: ${{ secrets.UCLOUD_PORT }}
+      UCLOUD_USER: ${{ secrets.UCLOUD_USER }}
+      UCLOUD_SUDO_PASSWORD: ${{ secrets.UCLOUD_SUDO_PASSWORD }}
+
     steps:
-      - uses: webfactory/ssh-agent@v0.9.0
-        with:
-          ssh-private-key: ${{ secrets.UCLOUD_SSH_PRIVATE_KEY }}
+      - name: Setup SSH key
+        run: |
+          mkdir -p ~/.ssh
+          printf '%s\n' "${{ secrets.UCLOUD_SSH_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          SSH_PORT="${UCLOUD_PORT:-22}"
+          ssh-keyscan -p "$SSH_PORT" "$UCLOUD_HOST" >> ~/.ssh/known_hosts
+          ssh-keyscan "$UCLOUD_HOST" >> ~/.ssh/known_hosts
 
       - name: Run certbot for nebula.hoarfrost.cloud
         run: |
-          SSH_PORT="${{ secrets.UCLOUD_PORT }}"
+          SSH_PORT="${UCLOUD_PORT:-22}"
           REMOTE_SUDO_ENV="/tmp/certbot-sudo.env"
           SUDO_ENV=$(mktemp)
           trap 'rm -f "$SUDO_ENV"' EXIT
           chmod 600 "$SUDO_ENV"
-          printf 'export SUDO_PASSWORD=%q\n' "${{ secrets.UCLOUD_SUDO_PASSWORD }}" > "$SUDO_ENV"
-          ssh-keyscan -p "$SSH_PORT" ${{ secrets.UCLOUD_HOST }} >> ~/.ssh/known_hosts 2>/dev/null || true
+          printf 'export SUDO_PASSWORD=%q\n' "$UCLOUD_SUDO_PASSWORD" > "$SUDO_ENV"
           scp -P "$SSH_PORT" "$SUDO_ENV" \
-            "${{ secrets.UCLOUD_USER }}@${{ secrets.UCLOUD_HOST }}:$REMOTE_SUDO_ENV"
-          ssh -p "$SSH_PORT" "${{ secrets.UCLOUD_USER }}@${{ secrets.UCLOUD_HOST }}" 'bash -se' <<'REMOTE'
+            "$UCLOUD_USER@$UCLOUD_HOST:$REMOTE_SUDO_ENV"
+          ssh -p "$SSH_PORT" "$UCLOUD_USER@$UCLOUD_HOST" 'bash -se' <<'REMOTE'
           set -e
           trap 'rm -f $REMOTE_SUDO_ENV' EXIT
           chmod 600 $REMOTE_SUDO_ENV
