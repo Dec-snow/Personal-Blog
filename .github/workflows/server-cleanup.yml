@@ -1,0 +1,43 @@
+name: Server Cleanup
+
+on:
+  workflow_dispatch:
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    env:
+      UCLOUD_HOST: ${{ secrets.UCLOUD_HOST }}
+      UCLOUD_PORT: ${{ secrets.UCLOUD_PORT }}
+      UCLOUD_USER: ${{ secrets.UCLOUD_USER }}
+
+    steps:
+      - name: Setup SSH key
+        run: |
+          mkdir -p ~/.ssh
+          printf '%s\n' "${{ secrets.UCLOUD_SSH_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          SSH_PORT="${UCLOUD_PORT:-22}"
+          ssh-keyscan -p "$SSH_PORT" "$UCLOUD_HOST" >> ~/.ssh/known_hosts
+          ssh-keyscan "$UCLOUD_HOST" >> ~/.ssh/known_hosts
+
+      - name: Clean up /tmp and check disk
+        run: |
+          SSH_PORT="${UCLOUD_PORT:-22}"
+          ssh -p "$SSH_PORT" "$UCLOUD_USER@$UCLOUD_HOST" 'bash -se' <<'REMOTE'
+          echo "=== Disk usage ==="
+          df -h / /tmp
+          echo ""
+          echo "=== /tmp contents ==="
+          ls -lah /tmp/ | head -30
+          echo ""
+          echo "=== Cleaning up old deploy artifacts ==="
+          rm -rf /tmp/deploy-* /tmp/blog-sudo.env /tmp/certbot-sudo.env /tmp/sync-auth-env.sh /tmp/blog-auth.env
+          rm -rf /tmp/blog-deploy-*
+          echo "Cleaned up /tmp"
+          echo ""
+          echo "=== Disk usage after cleanup ==="
+          df -h / /tmp
+          echo ""
+          echo "=== SSH connection test: OK ==="
+          REMOTE
