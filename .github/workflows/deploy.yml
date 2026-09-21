@@ -324,6 +324,9 @@ jobs:
           run_sudo rm -f /etc/nginx/sites-enabled/nebula.conf /etc/nginx/sites-available/nebula.conf
           run_sudo cp $TMP_DIR/acg-api/nginx-nebula.conf /etc/nginx/conf.d/nebula.conf
           run_sudo nginx -t
+          # Provision SSL for nebula.hoarfrost.cloud (needs DNS A record pointing here)
+          run_sudo certbot --nginx -d nebula.hoarfrost.cloud --non-interactive --agree-tos --register-unsafely-without-email --redirect || \
+            echo "WARN: certbot failed for nebula.hoarfrost.cloud (DNS may not be ready yet)"
           run_sudo systemctl reload-or-restart nginx || {
             echo "ERROR: nginx reload-or-restart failed"
             echo "=== nginx status ==="
