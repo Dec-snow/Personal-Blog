@@ -20,6 +20,15 @@ const (
 )
 
 func chatGuestLimit() int {
+	// 优先从 site_settings 读取，没有则回退环境变量，最后默认 5
+	var val string
+	err := db.QueryRow(`SELECT value FROM site_settings WHERE key = ?`, "chat_guest_limit").Scan(&val)
+	if err == nil && val != "" {
+		n, parseErr := strconv.Atoi(val)
+		if parseErr == nil && n >= 0 {
+			return n
+		}
+	}
 	n, err := strconv.Atoi(env("VISITOR_CHAT_LIMIT", "5"))
 	if err != nil || n <= 0 {
 		return 5
@@ -59,15 +68,33 @@ type deepseekResponse struct {
 }
 
 func chatHandler(w http.ResponseWriter, r *http.Request) {
-	switch r.Method {
-	case http.MethodGet:
-		handleChatQuota(w, r)
-	case http.MethodPost:
-		handleChatSend(w, r)
-	case http.MethodOptions:
-		w.WriteHeader(http.StatusNoContent)
+	path := strings.TrimPrefix(r.URL.Path, "/api/chat")
+	path = strings.TrimPrefix(path, "/")
+	switch path {
+	case "", "quota":
+		switch r.Method {
+		case http.MethodGet:
+			handleChatQuota(w, r)
+		case http.MethodPost:
+			handleChatSend(w, r)
+		case http.MethodOptions:
+			w.WriteHeader(http.StatusNoContent)
+		default:
+			methodNotAllowed(w)
+		}
+	case "limit":
+		switch r.Method {
+		case http.MethodGet:
+			handleChatLimitGet(w, r)
+		case http.MethodPost:
+			handleChatLimitSet(w, r)
+		case http.MethodOptions:
+			w.WriteHeader(http.StatusNoContent)
+		default:
+			methodNotAllowed(w)
+		}
 	default:
-		methodNotAllowed(w)
+		http.NotFound(w, r)
 	}
 }
 
@@ -196,8 +223,19 @@ func resolveChatIdentity(r *http.Request) (bool, string) {
 func buildChatSystemPrompt(body chatRequest) string {
 	var sb strings.Builder
 	sb.WriteString("你是 hoarfrost.cloud 个人博客的 AI 助手「博客助手」。\n")
-	sb.WriteString("你的职责是帮助访客了解博客内容、回答技术问题、闲聊等。\n")
-	sb.WriteString("保持友好、简洁的回答风格，每次回复不超过 300 字。\n")
+	sb.WriteString("你基于 DeepSeek 大语言模型（deepseek-chat），由博客站长部署提供服务。\n")
+	sb.WriteString("\n关于这个博客：\n")
+	sb.WriteString("- 域名：hoarfrost.cloud\n")
+	sb.WriteString("- 前端：React 18 + Vite + Tailwind CSS 3 + GSAP 动画\n")
+	sb.WriteString("- 后端：Go 1.22 + SQLite + Session 认证\n")
+	sb.WriteString("- 资源存储：腾讯云 COS\n")
+	sb.WriteString("- 站长：Dec_snow\n")
+	sb.WriteString("\n你的职责：帮助访客了解博客内容、解答技术问题、闲聊等。\n")
+	sb.WriteString("回答要求：\n")
+	sb.WriteString("- 保持友好、简洁的风格，每次回复不超过 300 字\n")
+	sb.WriteString("- 诚实回答，不知道的就说不知道，不要编造\n")
+	sb.WriteString("- 如果被问及模型/技术细节，如实说明你基于 DeepSeek\n")
+	sb.WriteString("- 用中文回复\n")
 	if body.PageTitle != "" {
 		sb.WriteString(fmt.Sprintf("\n当前页面：%s", body.PageTitle))
 	}
@@ -305,4 +343,80 @@ func deepseekBaseURL() string {
 
 func deepseekModel() string {
 	return env("DEEPSEEK_MODEL", "deepseek-chat")
+}
+
+// ─── 聊天限额管理（站长权限） ───
+
+func handleChatLimitGet(w http.ResponseWriter, r *http.Request) {
+	isOwner, _ := resolveChatIdentity(r)
+	if !isOwner {
+		writeJSONStatus(w, http.StatusForbidden, map[string]any{
+			"error":   "FORBIDDEN",
+			"message": "仅站长可查看聊天限额设置",
+		})
+		return
+	}
+	limit := chatGuestLimit()
+	writeJSON(w, map[string]any{
+		"limit":     limit,
+		"unlimited": limit == 0,
+	})
+}
+
+type chatLimitRequest struct {
+	Limit int `json:"limit"`
+}
+
+func handleChatLimitSet(w http.ResponseWriter, r *http.Request) {
+	isOwner, _ := resolveChatIdentity(r)
+	if !isOwner {
+		writeJSONStatus(w, http.StatusForbidden, map[string]any{
+			"error":   "FORBIDDEN",
+			"message": "仅站长可调整聊天限额",
+		})
+		return
+	}
+
+	var body chatLimitRequest
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		writeJSONStatus(w, http.StatusBadRequest, map[string]any{
+			"error":   "INVALID_JSON",
+			"message": "请求格式不正确",
+		})
+		return
+	}
+	if body.Limit < 0 {
+		writeJSONStatus(w, http.StatusBadRequest, map[string]any{
+			"error":   "INVALID_LIMIT",
+			"message": "限额不能为负数",
+		})
+		return
+	}
+	if body.Limit > 1000 {
+		writeJSONStatus(w, http.StatusBadRequest, map[string]any{
+			"error":   "INVALID_LIMIT",
+			"message": "限额不能超过 1000",
+		})
+		return
+	}
+
+	val := strconv.Itoa(body.Limit)
+	_, err := db.Exec(
+		`INSERT INTO site_settings (key, value, updated_at) VALUES (?, ?, ?)
+		 ON CONFLICT(key) DO UPDATE SET value = ?, updated_at = ?`,
+		"chat_guest_limit", val, time.Now().UTC().Format(time.RFC3339),
+		val, time.Now().UTC().Format(time.RFC3339),
+	)
+	if err != nil {
+		log.Printf("[chat] limit set error: %v", err)
+		serverError(w, err)
+		return
+	}
+
+	log.Printf("[chat] guest limit changed to %d", body.Limit)
+	writeJSON(w, map[string]any{
+		"ok":        true,
+		"limit":     body.Limit,
+		"unlimited": body.Limit == 0,
+	})
 }

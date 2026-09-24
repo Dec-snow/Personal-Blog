@@ -1,4 +1,4 @@
-﻿const CACHE_NAME = "hoarfrost-pwa-v5";
+﻿const CACHE_NAME = "hoarfrost-pwa-v7";
 const APP_START_URL = "/app";
 const APP_SHELL = [APP_START_URL, "/manifest.webmanifest", "/pwa-icon-192.png", "/pwa-icon-512.png"];
 

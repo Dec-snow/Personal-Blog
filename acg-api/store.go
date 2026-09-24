@@ -60,6 +60,11 @@ func migrateAll(db *sql.DB) error {
 			used INTEGER NOT NULL DEFAULT 0,
 			PRIMARY KEY (user_key, date)
 		);`,
+		`CREATE TABLE IF NOT EXISTS site_settings (
+			key TEXT PRIMARY KEY,
+			value TEXT NOT NULL DEFAULT '',
+			updated_at TEXT NOT NULL
+		);`,
 	}
 	for _, s := range stmts {
 		if _, err := db.Exec(s); err != nil {

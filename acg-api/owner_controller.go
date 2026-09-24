@@ -125,6 +125,34 @@ func ownerRouter(w http.ResponseWriter, r *http.Request) {
 		}
 		ownerUploadServeHandler(w, r, strings.TrimPrefix(path, "uploads/"))
 		return
+	case path == "birdvision/stats":
+		if r.Method != http.MethodGet {
+			methodNotAllowed(w)
+			return
+		}
+		ownerBirdVisionStatsHandler(w, r)
+		return
+	case path == "birdvision/settings":
+		if r.Method != http.MethodGet {
+			methodNotAllowed(w)
+			return
+		}
+		ownerBirdVisionSettingsHandler(w, r)
+		return
+	case path == "birdvision/chat-limit":
+		if r.Method != http.MethodPost {
+			methodNotAllowed(w)
+			return
+		}
+		ownerBirdVisionSetChatLimitHandler(w, r)
+		return
+	case path == "birdvision/chat-reset":
+		if r.Method != http.MethodPost {
+			methodNotAllowed(w)
+			return
+		}
+		ownerBirdVisionResetChatHandler(w, r)
+		return
 	default:
 		http.NotFound(w, r)
 	}

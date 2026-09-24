@@ -9,7 +9,7 @@ const TECH_BADGES = [
   { name: "React Router 6", icon: "🧭", label: "Routing", color: "#CA4245" },
   { name: "Go 1.22", icon: "🐹", label: "Backend", color: "#00ADD8" },
   { name: "SQLite", icon: "🗄️", label: "Database", color: "#003B57" },
-  { name: "COS", icon: "☁️", label: "Storage", color: "#00A4FF" },
+  { name: "腾讯云 COS", icon: "☁️", label: "Storage", color: "#00A4FF" },
   { name: "PWA", icon: "📱", label: "Progressive", color: "#5A0FC8" },
   { name: "DeepSeek", icon: "🤖", label: "AI Chat", color: "#4D6BFE" },
 ];
@@ -67,38 +67,34 @@ const ARCH_LAYERS = [
     label: "网关层",
     eng: "Gateway",
     color: "#646CFF",
-
     items: [
-      { name: "Vite Dev Proxy", detail: "/api → Go 后端，/cos → COS 同源加载" },
-      { name: "React Router 6", detail: "嵌套路由 + SiteLayout，6 页懒加载" },
+      { name: "Nginx", detail: "HTTPS 反代，静态资源 + /api 代理到 Go 后端" },
+      { name: "React Router 6", detail: "嵌套路由 + SiteLayout，10 页懒加载" },
     ],
   },
   {
     label: "服务层",
     eng: "Service",
     color: "#00ADD8",
-
     items: [
-      { name: "Go 1.22 HTTP", detail: "acg-api 轻量服务，20+ RESTful 端点" },
-      { name: "Session Auth", detail: "Cookie 会话 + bcrypt，Owner 权限分级" },
-      { name: "AI 集成", detail: "DeepSeek 聊天 + AI 图片生成 API" },
+      { name: "Go 1.22 HTTP", detail: "acg-api 轻量服务，约 20 个 RESTful 端点" },
+      { name: "Session Auth", detail: "邮箱密码登录 + bcrypt + Cookie 会话" },
+      { name: "AI 聊天", detail: "DeepSeek API 对接，按 IP 每日限额" },
     ],
   },
   {
     label: "数据层",
     eng: "Data",
     color: "#88CE02",
-
     items: [
-      { name: "SQLite", detail: "modernc.org/sqlite 嵌入式，零配置持久化" },
-      { name: "18 张数据表", detail: "users, moments, gallery, bangumi, sessions, drafts…" },
+      { name: "SQLite", detail: "modernc.org/sqlite 嵌入式，WAL 模式" },
+      { name: "7 张数据表", detail: "users, sessions, moments, chat_quota, drafts, login_challenges, site_settings" },
     ],
   },
   {
     label: "资源层",
     eng: "Resources",
     color: "#00A4FF",
-
     items: [
       { name: "腾讯云 COS", detail: "壁纸、相册、头像、音乐统一托管" },
       { name: "中文路径编码", detail: "URL 编码支持中文文件夹名" },
@@ -114,14 +110,13 @@ const PAGE_MATRIX = [
     eng: "Home",
     icon: "🏠",
     accent: "#FF6BAA",
-
     features: [
-      "Hero 壁纸选择器 — 指南针拖拽 + 锦瑟诗句",
-      "Bento 影像网格 — 6 格 3D 倾斜 + 档案翻页器",
-      "Source Slot 抽奖机 — 老虎机滚动 + API 回退",
+      "Hero 指南针壁纸 — 拖拽旋转 + 四方向锦瑟诗句",
+      "影像档案翻页器 — 3D 翻转浏览，SWITCH COVER 唤起",
+      "Source Slot 抽奖机 — 三位数字滚动 + 随机壁纸奖品",
       "Story 信封展开 + Contact 联系区域",
     ],
-    techs: ["GSAP", "ScrollTrigger", "3D Tilt", "Slot Machine"],
+    techs: ["GSAP", "3D Tilt", "Slot Machine", "Scroll Reveal"],
   },
   {
     route: "/gallery",
@@ -129,14 +124,13 @@ const PAGE_MATRIX = [
     eng: "Gallery",
     icon: "🖼️",
     accent: "#7C5CFF",
-
     features: [
-      "API 驱动相册列表 — SQLite 持久化，动态增删",
+      "相册列表 — 静态 JSON 配置，支持多相册分组",
       "相册详情页 — 大图浏览，首张 eager 其余 lazy",
-      "控制台发布 — 后台 COS 上传 + DB 写入，一键发布到相册",
-      "封面自动指定 — 首张上传图片自动成为封面",
+      "COS 资源托管 — 图片统一存腾讯云，CDN 加速",
+      "控制台上传 — 站长后台直传 COS，按相册分类存储",
     ],
-    techs: ["SQLite CRUD", "COS Upload", "Lazy Load", "API Fallback"],
+    techs: ["Static Data", "COS CDN", "Lazy Load", "Fallback"],
   },
   {
     route: "/moments",
@@ -146,11 +140,11 @@ const PAGE_MATRIX = [
     accent: "#FF8FAB",
     features: [
       "卡片时间线布局 — tone 调色 + module 分类",
-      "API 优先加载 — 不可用时回退静态 JSON",
+      "API 优先加载 — SQLite 持久化，不可用时回退静态 JSON",
       "后台增删 — 支持图文混排，ID 精准删除",
-      "渐变背景 + 光晕装饰，柔和阅读体验",
+      "COS 附图 — 发布时上传图片到 COS，删除时自动清理",
     ],
-    techs: ["Timeline", "API First", "Static Fallback", "CRUD"],
+    techs: ["SQLite CRUD", "COS Upload", "API First", "Static Fallback"],
   },
   {
     route: "/bili",
@@ -159,12 +153,12 @@ const PAGE_MATRIX = [
     icon: "📺",
     accent: "#00C2FF",
     features: [
-      "追番列表 — B站 API 同步番剧，卡片 + 进度条",
-      "B站外链直达 — 按钮跳转番剧播放页面",
-      "作者在看 — 雷达动态卡片，API 不可用时优雅占位",
-      "移动端默认 3 部可展开/收起并刷新，响应式适配",
+      "追番导航 — 静态番剧卡片，点击跳转 B站播放页",
+      "创作者展示 — 关注的 UP 主卡片，外链直达空间",
+      "ACG 主题板块 — 番剧 / 创作者分区导航",
+      "移动端响应式 — 卡片网格自适应布局",
     ],
-    techs: ["Bilibili API", "Sync Queue", "Cached Cover", "Mobile Expand"],
+    techs: ["Static Nav", "External Link", "Responsive Grid"],
   },
   {
     route: "/ai-traffic",
@@ -178,7 +172,7 @@ const PAGE_MATRIX = [
       "数字缓动动画 + 10s 自动轮询刷新",
       "站点信息卡 — 技术栈、存储、部署概览",
     ],
-    techs: ["10s Polling", "Number Easing", "Circle HUD", "Mock Mode"],
+    techs: ["10s Polling", "Number Easing", "Circle HUD"],
   },
   {
     route: "/about",
@@ -195,18 +189,33 @@ const PAGE_MATRIX = [
     techs: ["Shadow DOM", "CSS Isolation", "Marquee", "3D Shelf"],
   },
   {
+    route: "/chat",
+    title: "博客助手",
+    eng: "AI Chat",
+    icon: "🤖",
+    accent: "#4D6BFE",
+    features: [
+      "DeepSeek AI 对话 — 同步响应，实时回复",
+      "访客每日限额 — 按 IP 计数，次日自动重置",
+      "站长无限额度 — 登录后解锁无限制对话",
+      "二次元风格界面 — 暗夜樱花 + 呼吸光晕主题",
+    ],
+    techs: ["DeepSeek API", "IP Rate Limit", "Session Auth", "Anime UI"],
+  },
+  {
     route: "/app",
     title: "站长控制台",
     eng: "Console",
     icon: "⚙️",
     accent: "#5A0FC8",
     features: [
-      "Session 登录 — 邮箱密码 + 学号安全验证，Cookie 会话",
-      "相册管理 — COS 上传图片 → 发布到相册 → 按相册分组查看 → 删除",
-      "随笔管理 — 年份 / 日期 / 分类 / 正文发布，支持 COS 附图",
-      "运行仪表盘 — 后端健康、用户统计、AI 调用图表、数据同步",
+      "账号登录 — 邮箱密码 + Cookie 会话，站长权限门控",
+      "随笔管理 — 发布 / 删除，支持 COS 附图自动清理",
+      "COS 资产上传 — 相册 / 随笔 / 头像多分类直传",
+      "聊天限额管理 — 滑块调整访客每日对话次数",
+      "运行总览 — 后端健康、站长状态、随笔列表一览",
     ],
-    techs: ["Session Auth", "COS Upload", "SQLite CRUD", "Health Monitor"],
+    techs: ["Session Auth", "COS Upload", "SQLite CRUD", "Chat Limit", "Health Monitor"],
   },
 ];
 
@@ -216,30 +225,30 @@ const INTERACTIONS = [
     icon: "🧭",
     title: "指南针壁纸选择",
     desc: "拖拽旋转指针实时高亮方向卡，松手吸附最近方向，《锦瑟》四联诗句渐变描边随方向切换",
-    tag: "GSAP + ScrollTrigger",
+    tag: "GSAP + Drag",
   },
   {
     icon: "📖",
     title: "影像档案翻页器",
-    desc: "3D rotateY 翻页浏览 6 张影像，卡片层叠偏移，侧栏片段笔记 + 快速跳转，SWITCH COVER 唤起",
+    desc: "3D rotateY 翻页浏览影像档案，卡片层叠偏移，侧栏片段笔记 + 快速跳转，SWITCH COVER 唤起",
     tag: "3D Transform",
   },
   {
     icon: "🎰",
     title: "老虎机抽奖机",
-    desc: "拉杆触发三位数字滚动 1.1s 定格，弹出奖品卡片。壁纸奖品异步加载，含历史记录与测试模式",
+    desc: "拉杆触发三位数字滚动定格，弹出随机壁纸奖品。奖品异步从 COS 加载，含历史记录与测试模式",
     tag: "Slot Animation",
   },
   {
     icon: "✉️",
     title: "信封 Story 展开",
-    desc: "信封随滚动进入视口展开，展示留言，配合 GSAP 鼠标倾斜的相框图片，柔和光晕装饰",
+    desc: "信封随滚动进入视口展开，展示寄语，配合光晕装饰与径向光弧，柔和的阅读体验",
     tag: "Scroll Reveal",
   },
   {
     icon: "🎵",
     title: "音波播放指示器",
-    desc: "导航栏音乐按钮四条竖线动画，各主题配色独立。点击切换播/停 COS 小松鼠.mp3 循环",
+    desc: "导航栏音乐按钮四条竖线动画，各主题配色独立。点击切换播/停 COS 背景音循环",
     tag: "Audio Control",
   },
   {
@@ -255,7 +264,7 @@ const TIMELINE = [
   {
     phase: "起步",
     title: "项目骨架搭建",
-    desc: "基于获奖网站教程初始化 React + Vite + Tailwind 工程，理解组件划分与路由架构，配置 COS 开发代理实现同源资源加载。",
+    desc: "基于开源模板初始化 React + Vite + Tailwind 工程，理解组件划分与路由架构，配置 COS 开发代理实现同源资源加载。",
     accent: "#7C5CFF",
   },
   {
@@ -267,19 +276,19 @@ const TIMELINE = [
   {
     phase: "开发",
     title: "前后端功能实现",
-    desc: "Go 后端从零搭建：SQLite 持久化、Session 认证、相册 CRUD、随笔 CRUD、访客留言、AI 聊天。前端接入 API，番剧通过 B站 API 同步 + 链接跳转，新增创造纪事页面与导航栏音乐播放。",
+    desc: "Go 后端从零搭建：SQLite 持久化、Session 认证、随笔 CRUD、AI 聊天 + 访客限额。前端接入 API，新增博客助手、创造纪事页面与导航栏音乐播放。",
     accent: "#00C2FF",
   },
   {
     phase: "打磨",
     title: "交互细节与 Owner 控制台",
-    desc: "实现 GSAP 滚动动画、3D 卡片倾斜、老虎机抽奖、信封展开等交互。搭建 /app 站长控制台：登录门控、相册/随笔管理、COS 上传、后端健康监控，PWA 门控仅限生产域名。",
+    desc: "实现指南针壁纸、影像档案翻页、老虎机抽奖、信封展开等交互。搭建 /app 站长控制台：登录门控、随笔管理、COS 资产上传、后端健康监控，PWA 门控仅限生产域名。",
     accent: "#88CE02",
   },
   {
     phase: "上线",
     title: "部署与持续优化",
-    desc: "前端静态部署至云端，Go 后端运行于服务器。域名 HTTPS 接入，PWA Manifest 注入，Service Worker 离线缓存。Gallery 从 GitHub API 迁移至 SQLite + API 架构，密码自动同步。",
+    desc: "前端静态部署至云端，Go 后端运行于阿里云 ECS。域名 HTTPS 接入，PWA Manifest 注入，Service Worker 离线缓存。持续迭代：博客助手二次元化、聊天限额管理等。",
     accent: "#FF8FAB",
   },
 ];
@@ -398,7 +407,7 @@ const BuildPage = () => {
               页面矩阵
             </h2>
             <p className="mt-2 text-sm text-[#2D2A3A]/50">
-              7 个前端页面 + 站长控制台，每页独立功能体系
+              8 个前端页面 + 站长控制台，每页独立功能体系
             </p>
           </div>
         </RevealSection>

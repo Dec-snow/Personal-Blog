@@ -20,6 +20,20 @@ export const ownerConsoleScreens = [
     title: "相册图片",
     subtitle: "上传图片到 COS，并把图片发布到站内相册。",
   },
+  {
+    id: "chat-limit",
+    navLabel: "聊天次数",
+    icon: "C",
+    title: "聊天次数管理",
+    subtitle: "调整博客助手每 IP 每日对话次数上限。",
+  },
+  {
+    id: "birdvision",
+    navLabel: "BirdVision",
+    icon: "B",
+    title: "BirdVision 管理",
+    subtitle: "管理鸟类知识问答系统的对话次数限制。",
+  },
 ];
 
 export const ownerConsoleModules = [
@@ -38,6 +52,22 @@ export const ownerConsoleModules = [
     icon: "G",
     tone: "green",
     status: "待上传 0",
+  },
+  {
+    id: "chat-limit",
+    title: "聊天次数",
+    description: "调整博客助手每日对话次数上限，默认 5 次。",
+    icon: "C",
+    tone: "rose",
+    status: "默认 5 次",
+  },
+  {
+    id: "birdvision",
+    title: "BirdVision",
+    description: "管理鸟类知识问答系统的对话次数与统计。",
+    icon: "B",
+    tone: "green",
+    status: "鸟类问答",
   },
 ];
 

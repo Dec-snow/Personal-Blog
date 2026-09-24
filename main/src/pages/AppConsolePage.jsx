@@ -84,6 +84,18 @@ const AppConsolePage = () => {
   const [galleryUploads, setGalleryUploads] = useState([]);
   const [uploadBusy, setUploadBusy] = useState(false);
 
+  // ── Chat limit state ──
+  const [chatLimit, setChatLimit] = useState(5);
+  const [chatLimitBusy, setChatLimitBusy] = useState(false);
+  const [chatLimitInfo, setChatLimitInfo] = useState(null);
+
+  // ── BirdVision state ──
+  const [birdvisionLimit, setBirdvisionLimit] = useState(20);
+  const [birdvisionBusy, setBirdvisionBusy] = useState(false);
+  const [birdvisionResetBusy, setBirdvisionResetBusy] = useState(false);
+  const [birdvisionStats, setBirdvisionStats] = useState(null);
+  const [birdvisionError, setBirdvisionError] = useState("");
+
   const showError = (msg) => {
     setError(msg);
     setSuccessMsg("");
@@ -100,12 +112,13 @@ const AppConsolePage = () => {
 
   const loadConsole = useCallback(async () => {
     setError("");
-    const [authResult, healthResult, ownerStatusResult, momentsResult] =
+    const [authResult, healthResult, ownerStatusResult, momentsResult, chatResult] =
       await Promise.allSettled([
         authMe(),
         fetchBackendHealth(),
         fetchOwnerStatus(),
         fetchPublicMoments(),
+        fetch("/api/chat", { headers: { Accept: "application/json" } }).then((r) => r.json()),
       ]);
 
     if (authResult.status === "fulfilled") {
@@ -115,6 +128,10 @@ const AppConsolePage = () => {
     if (ownerStatusResult.status === "fulfilled") setOwnerStatus(ownerStatusResult.value);
     if (momentsResult.status === "fulfilled" && momentsResult.value?.items) {
       setMomentList(momentsResult.value.items);
+    }
+    if (chatResult.status === "fulfilled" && chatResult.value?.limit !== undefined) {
+      setChatLimit(chatResult.value.limit);
+      setChatLimitInfo(chatResult.value);
     }
 
     const requiredFailures = [authResult, healthResult].some(
@@ -171,6 +188,9 @@ const AppConsolePage = () => {
     setError("");
     setSuccessMsg("");
     setDeleteConfirmKey(""); // cancel any pending delete confirmation
+    if (screenId === "birdvision") {
+      loadBirdvisionStats();
+    }
   };
 
   // ── Gallery handlers ──
@@ -307,6 +327,102 @@ const AppConsolePage = () => {
       showError(e.message || "碎语发布失败");
     } finally {
       setMomentPublishBusy(false);
+    }
+  };
+
+  // ── Chat limit save handler ──
+  const handleSaveChatLimit = async () => {
+    setChatLimitBusy(true);
+    setError("");
+    try {
+      const res = await fetch("/api/chat/limit", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ limit: chatLimit }),
+      });
+      const data = await res.json();
+      if (data.error) {
+        showError(data.message || "保存失败");
+      } else {
+        showSuccess(`聊天次数已更新为 ${chatLimit} 次/日`);
+        if (data.limit !== undefined) setChatLimit(data.limit);
+        setChatLimitInfo(data);
+      }
+    } catch (e) {
+      showError(e.message || "保存失败，请检查后端是否支持 /api/chat/limit 接口");
+    } finally {
+      setChatLimitBusy(false);
+    }
+  };
+
+  // ── BirdVision handlers ──
+  const loadBirdvisionStats = useCallback(async () => {
+    try {
+      const res = await fetch("/api/owner/birdvision/stats", {
+        headers: { Accept: "application/json" },
+        credentials: "include",
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setBirdvisionError(data.message || "无法加载 BirdVision 数据");
+        return;
+      }
+      setBirdvisionStats(data);
+      if (data.daily_limit !== undefined) {
+        setBirdvisionLimit(data.daily_limit);
+      }
+      setBirdvisionError("");
+    } catch (e) {
+      setBirdvisionError("无法连接到 BirdVision 服务，请检查服务是否运行");
+    }
+  }, []);
+
+  const handleSaveBirdvisionLimit = async () => {
+    setBirdvisionBusy(true);
+    setBirdvisionError("");
+    try {
+      const res = await fetch("/api/owner/birdvision/chat-limit", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ limit: birdvisionLimit }),
+      });
+      const data = await res.json();
+      if (data.error || !data.success) {
+        showError(data.message || "保存失败");
+      } else {
+        showSuccess(`BirdVision 次数限制已更新为 ${birdvisionLimit} 次/日`);
+        if (data.limit !== undefined) setBirdvisionLimit(data.limit);
+        loadBirdvisionStats();
+      }
+    } catch (e) {
+      showError(e.message || "保存失败");
+    } finally {
+      setBirdvisionBusy(false);
+    }
+  };
+
+  const handleResetBirdvisionChat = async () => {
+    if (!window.confirm("确定要重置今日所有访客的对话次数吗？")) return;
+    setBirdvisionResetBusy(true);
+    try {
+      const res = await fetch("/api/owner/birdvision/chat-reset", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+      });
+      const data = await res.json();
+      if (data.error || !data.success) {
+        showError(data.message || "重置失败");
+      } else {
+        showSuccess(data.message || "今日对话次数已重置");
+        loadBirdvisionStats();
+      }
+    } catch (e) {
+      showError(e.message || "重置失败");
+    } finally {
+      setBirdvisionResetBusy(false);
     }
   };
 
@@ -999,6 +1115,242 @@ const AppConsolePage = () => {
               <p style={{ fontSize: 11, color: "#aaa", marginTop: 8 }}>
                 列表展示数据库中的随笔，发布和删除即时生效。
               </p>
+            </div>
+          </section>
+
+          {/* ══════════ CHAT LIMIT SCREEN ══════════ */}
+          <section className={`owner-screen ${activeScreen === "chat-limit" ? "active" : ""}`}>
+            <div className="owner-chat-limit-card">
+              <div className="owner-panel-title">
+                <h2>每日对话次数上限</h2>
+                <StatusTag>{chatLimitInfo?.unlimited ? "无限" : `当前 ${chatLimit} 次`}</StatusTag>
+              </div>
+
+              <div className="owner-chat-limit-row" style={{ marginTop: 20 }}>
+                <span className="owner-chat-limit-number">{chatLimit}</span>
+                <span style={{ fontSize: "0.85rem", color: "#8a7078" }}>次 / 日</span>
+                <input
+                  type="range"
+                  min="0"
+                  max="50"
+                  value={chatLimit}
+                  onChange={(e) => setChatLimit(parseInt(e.target.value, 10))}
+                  className="owner-chat-limit-slider"
+                />
+                <button
+                  type="button"
+                  className="owner-chat-limit-btn"
+                  onClick={handleSaveChatLimit}
+                  disabled={chatLimitBusy}
+                >
+                  {chatLimitBusy ? "保存中..." : "保存"}
+                </button>
+              </div>
+
+              <div className="owner-chat-limit-hint">
+                <strong>说明：</strong>
+                默认 5 次/日。设为 <strong>0</strong> 表示不限制。用户达到上限后将无法继续对话，次日 0 点自动重置。
+                <br />
+                当前会话状态：
+                {chatLimitInfo?.unlimited ? " 无限制（站长身份）" : ` 已用 ${chatLimitInfo?.used ?? 0} / ${chatLimitInfo?.limit ?? chatLimit} 次`}
+              </div>
+
+              {/* 快速预设 */}
+              <div style={{ marginTop: 16, display: "flex", gap: 8, flexWrap: "wrap" }}>
+                {[
+                  { v: 0, label: "不限制" },
+                  { v: 3, label: "3 次" },
+                  { v: 5, label: "5 次（默认）" },
+                  { v: 10, label: "10 次" },
+                  { v: 20, label: "20 次" },
+                ].map((preset) => (
+                  <button
+                    key={preset.v}
+                    type="button"
+                    className="owner-secondary"
+                    onClick={() => setChatLimit(preset.v)}
+                    style={{
+                      padding: "5px 12px",
+                      fontSize: "0.78rem",
+                      ...(chatLimit === preset.v ? {
+                        borderColor: "rgba(200, 130, 145, 0.5)",
+                        background: "rgba(255, 240, 235, 0.85)",
+                        color: "#b76e79",
+                      } : {}),
+                    }}
+                  >
+                    {preset.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* 状态卡片 */}
+            <div className="owner-panel owner-glass" style={{ marginTop: 16 }}>
+              <div className="owner-panel-title">
+                <h2>当前状态</h2>
+                <StatusTag>{chatLimitInfo ? "实时" : "加载中"}</StatusTag>
+              </div>
+              <div className="owner-stats-grid" style={{ gridTemplateColumns: "repeat(2, minmax(0, 1fr))" }}>
+                <article className="owner-stat-card">
+                  <span>每日上限</span>
+                  <strong>{chatLimitInfo?.unlimited ? "无限" : (chatLimitInfo?.limit ?? chatLimit)}</strong>
+                  <em>次 / 日</em>
+                </article>
+                <article className="owner-stat-card">
+                  <span>今日已用</span>
+                  <strong>{chatLimitInfo?.used ?? 0}</strong>
+                  <em>次</em>
+                </article>
+                <article className="owner-stat-card">
+                  <span>今日剩余</span>
+                  <strong>{chatLimitInfo?.unlimited ? "无限" : (chatLimitInfo?.remaining ?? chatLimit)}</strong>
+                  <em>次</em>
+                </article>
+                <article className="owner-stat-card">
+                  <span>聊天功能</span>
+                  <strong>{chatLimitInfo?.chatEnabled ? "已启用" : "未配置"}</strong>
+                  <em>{chatLimitInfo?.isLogin ? "已登录" : "访客"}</em>
+                </article>
+              </div>
+            </div>
+          </section>
+
+          {/* ══════════ BIRDVISION SCREEN ══════════ */}
+          <section className={`owner-screen ${activeScreen === "birdvision" ? "active" : ""}`}>
+            <div className="owner-chat-limit-card">
+              <div className="owner-panel-title">
+                <h2>BirdVision 每日对话上限</h2>
+                <StatusTag>{birdvisionStats?.daily_limit === 0 ? "无限" : `当前 ${birdvisionLimit} 次`}</StatusTag>
+              </div>
+
+              {birdvisionError && (
+                <div style={{
+                  padding: "10px 14px",
+                  borderRadius: 10,
+                  background: "rgba(239, 83, 80, 0.1)",
+                  border: "1px solid rgba(239, 83, 80, 0.3)",
+                  color: "#e57373",
+                  fontSize: "0.82rem",
+                  marginTop: 12,
+                }}>
+                  {birdvisionError}
+                </div>
+              )}
+
+              <div className="owner-chat-limit-row" style={{ marginTop: 20 }}>
+                <span className="owner-chat-limit-number" style={{ color: "#2e7d32" }}>
+                  {birdvisionLimit}
+                </span>
+                <span style={{ fontSize: "0.85rem", color: "#5a8a5a" }}>次 / 日</span>
+                <input
+                  type="range"
+                  min="0"
+                  max="100"
+                  value={birdvisionLimit}
+                  onChange={(e) => setBirdvisionLimit(parseInt(e.target.value, 10))}
+                  className="owner-chat-limit-slider"
+                  style={{ accentColor: "#43a047" }}
+                />
+                <button
+                  type="button"
+                  className="owner-chat-limit-btn"
+                  style={{
+                    background: "linear-gradient(135deg, #43a047, #2e7d32)",
+                    borderColor: "rgba(46, 125, 50, 0.3)",
+                  }}
+                  onClick={handleSaveBirdvisionLimit}
+                  disabled={birdvisionBusy}
+                >
+                  {birdvisionBusy ? "保存中..." : "保存"}
+                </button>
+              </div>
+
+              <div className="owner-chat-limit-hint">
+                <strong>说明：</strong>
+                控制鸟类知识问答系统每 IP 每日对话次数上限。设为 <strong>0</strong> 表示不限制。次日 0 点自动重置。
+              </div>
+
+              {/* 快速预设 */}
+              <div style={{ marginTop: 16, display: "flex", gap: 8, flexWrap: "wrap" }}>
+                {[
+                  { v: 0, label: "不限制" },
+                  { v: 5, label: "5 次" },
+                  { v: 10, label: "10 次" },
+                  { v: 20, label: "20 次（推荐）" },
+                  { v: 50, label: "50 次" },
+                ].map((preset) => (
+                  <button
+                    key={preset.v}
+                    type="button"
+                    className="owner-secondary"
+                    onClick={() => setBirdvisionLimit(preset.v)}
+                    style={{
+                      padding: "5px 12px",
+                      fontSize: "0.78rem",
+                      ...(birdvisionLimit === preset.v ? {
+                        borderColor: "rgba(46, 125, 50, 0.4)",
+                        background: "rgba(232, 245, 233, 0.8)",
+                        color: "#2e7d32",
+                      } : {}),
+                    }}
+                  >
+                    {preset.label}
+                  </button>
+                ))}
+              </div>
+
+              {/* 重置按钮 */}
+              <div style={{ marginTop: 16, paddingTop: 16, borderTop: "1px solid rgba(0,0,0,0.06)" }}>
+                <button
+                  type="button"
+                  className="owner-secondary"
+                  onClick={handleResetBirdvisionChat}
+                  disabled={birdvisionResetBusy}
+                  style={{
+                    padding: "6px 14px",
+                    fontSize: "0.8rem",
+                    borderColor: "rgba(255, 152, 0, 0.4)",
+                    color: "#f57c00",
+                  }}
+                >
+                  {birdvisionResetBusy ? "重置中..." : "🔄 重置今日所有访客次数"}
+                </button>
+              </div>
+            </div>
+
+            {/* 统计卡片 */}
+            <div className="owner-panel owner-glass" style={{ marginTop: 16 }}>
+              <div className="owner-panel-title">
+                <h2>BirdVision 统计</h2>
+                <StatusTag>{birdvisionStats ? "实时" : "加载中"}</StatusTag>
+              </div>
+              <div className="owner-stats-grid" style={{ gridTemplateColumns: "repeat(2, minmax(0, 1fr))" }}>
+                <article className="owner-stat-card">
+                  <span>每日上限</span>
+                  <strong style={{ color: "#2e7d32" }}>
+                    {birdvisionStats?.daily_limit === 0 ? "无限" : (birdvisionStats?.daily_limit ?? birdvisionLimit)}
+                  </strong>
+                  <em>次 / 日</em>
+                </article>
+                <article className="owner-stat-card">
+                  <span>今日对话总数</span>
+                  <strong>{birdvisionStats?.today_total_chats ?? "-"}</strong>
+                  <em>次</em>
+                </article>
+                <article className="owner-stat-card">
+                  <span>今日访客数</span>
+                  <strong>{birdvisionStats?.unique_visitors_today ?? "-"}</strong>
+                  <em>人</em>
+                </article>
+                <article className="owner-stat-card">
+                  <span>上次重置</span>
+                  <strong style={{ fontSize: "0.85rem" }}>
+                    {birdvisionStats?.last_reset_at ?? "从未"}
+                  </strong>
+                  <em>时间</em>
+                </article>
+              </div>
             </div>
           </section>
         </section>
