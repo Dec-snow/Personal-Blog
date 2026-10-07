@@ -1,0 +1,124 @@
+name: Deploy wb.hoarfrost.cloud proxy (workbuddy2api)
+
+run-name: wb.hoarfrost.cloud proxy ${{ github.sha }}
+
+# 把 workbuddy2api（服务器 127.0.0.1:7863）挂到 wb.hoarfrost.cloud：
+#   1) 装 HTTP 引导块 → 2) certbot webroot 签证书 → 3) 装最终反代配置 → 4) 健康检查
+# 幂等：重复运行只会重装配置，证书未到期时 certbot 自动跳过。
+#
+# 前置条件（人工一次性）：
+#   - 阿里云 DNS 已加 A 记录：wb → 47.98.104.141
+#   - secrets 复用现有：UCLOUD_HOST / UCLOUD_PORT / UCLOUD_USER / UCLOUD_SSH_KEY / UCLOUD_SUDO_PASSWORD
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [master]
+    paths:
+      - "deploy/nginx-wb.conf"
+      - "deploy/nginx-wb-bootstrap.conf"
+      - "deploy/certbot-reload-nginx.sh"
+      - ".github/workflows/deploy-wb-proxy.yml"
+
+jobs:
+  deploy-proxy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    env:
+      UCLOUD_HOST: ${{ secrets.UCLOUD_HOST }}
+      UCLOUD_PORT: ${{ secrets.UCLOUD_PORT }}
+      UCLOUD_USER: ${{ secrets.UCLOUD_USER }}
+      UCLOUD_SUDO_PASSWORD: ${{ secrets.UCLOUD_SUDO_PASSWORD }}
+      DOMAIN: wb.hoarfrost.cloud
+      TMP_DIR: /tmp/wb-proxy-deploy
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup SSH key
+        run: |
+          mkdir -p ~/.ssh
+          printf '%s\n' "${{ secrets.UCLOUD_SSH_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          SSH_PORT="${UCLOUD_PORT:-22}"
+          ssh-keyscan -p "$SSH_PORT" "$UCLOUD_HOST" >> ~/.ssh/known_hosts
+          ssh-keyscan "$UCLOUD_HOST" >> ~/.ssh/known_hosts
+
+      - name: Upload nginx configs
+        run: |
+          SSH_PORT="${UCLOUD_PORT:-22}"
+          ssh -p "$SSH_PORT" "$UCLOUD_USER@$UCLOUD_HOST" "rm -rf $TMP_DIR && mkdir -p $TMP_DIR"
+          scp -P "$SSH_PORT" deploy/nginx-wb.conf deploy/nginx-wb-bootstrap.conf \
+            deploy/certbot-reload-nginx.sh \
+            "$UCLOUD_USER@$UCLOUD_HOST:$TMP_DIR/"
+
+      - name: Install proxy conf and issue certificate
+        run: |
+          SSH_PORT="${UCLOUD_PORT:-22}"
+          REMOTE_SUDO_ENV="/tmp/wb-sudo.env"
+          SUDO_ENV=$(mktemp)
+          trap 'rm -f "$SUDO_ENV"' EXIT
+          chmod 600 "$SUDO_ENV"
+          printf 'export SUDO_PASSWORD=%q\n' "$UCLOUD_SUDO_PASSWORD" > "$SUDO_ENV"
+          scp -P "$SSH_PORT" "$SUDO_ENV" \
+            "$UCLOUD_USER@$UCLOUD_HOST:$REMOTE_SUDO_ENV"
+          ssh -p "$SSH_PORT" "$UCLOUD_USER@$UCLOUD_HOST" 'bash -se' <<REMOTE
+          set -e
+          trap 'rm -f $REMOTE_SUDO_ENV' EXIT
+          chmod 600 $REMOTE_SUDO_ENV
+          . $REMOTE_SUDO_ENV
+          run_sudo() {
+            if [ -n "\${SUDO_PASSWORD:-}" ]; then
+              printf '%s\n' "\$SUDO_PASSWORD" | sudo -S -p '' "\$@"
+            else
+              sudo "\$@"
+            fi
+          }
+
+          run_sudo mkdir -p /var/www/certbot
+
+          # 0) 证书续期后自动 reload nginx（webroot 方式 certbot 不会自己 reload）
+          run_sudo mkdir -p /etc/letsencrypt/renewal-hooks/deploy
+          run_sudo cp $TMP_DIR/certbot-reload-nginx.sh /etc/letsencrypt/renewal-hooks/deploy/reload-nginx.sh
+          run_sudo chmod +x /etc/letsencrypt/renewal-hooks/deploy/reload-nginx.sh
+
+          # 1) 引导块（HTTP only，可先通过 nginx -t）
+          run_sudo cp $TMP_DIR/nginx-wb-bootstrap.conf /etc/nginx/conf.d/wb-bootstrap.conf
+          run_sudo nginx -t
+          run_sudo systemctl reload nginx
+
+          # 2) 首次签发（http-01 / webroot）；未到期时 certbot 会直接跳过
+          run_sudo certbot certonly --webroot -w /var/www/certbot -d $DOMAIN --non-interactive --agree-tos --register-unsafely-without-email --keep-until-expiring || echo "WARN: certbot 失败 —— 先确认 wb 的 DNS A 记录已生效，再手动重跑本工作流"
+
+          # 3) 最终反代配置（引用刚签发的证书），并移除引导块。
+          #    证书还没签下来就**不要**装 wb.conf：它引用了不存在的证书文件，会让
+          #    nginx -t 失败，连带把部署博客的 deploy.yml 也一起搞挂。
+          if run_sudo test -f /etc/letsencrypt/live/$DOMAIN/fullchain.pem; then
+            run_sudo cp $TMP_DIR/nginx-wb.conf /etc/nginx/conf.d/wb.conf
+            run_sudo rm -f /etc/nginx/conf.d/wb-bootstrap.conf
+            run_sudo nginx -t
+            run_sudo systemctl reload nginx || {
+              echo "ERROR: nginx reload failed"
+              run_sudo systemctl --no-pager --full status nginx || true
+              run_sudo journalctl -u nginx -n 100 --no-pager || true
+              exit 1
+            }
+            echo "wb.hoarfrost.cloud 反代配置已安装（HTTPS）"
+          else
+            echo "WARN: $DOMAIN 证书尚未签发，本次只保留 HTTP 引导块，未安装反代配置；DNS 生效后重跑本工作流即可"
+          fi
+          rm -rf $TMP_DIR
+          REMOTE
+
+      - name: Post-deploy health check
+        run: |
+          # 面板与网关都要求 api_key，未带 key 时 /panel/api/* 返回 401 才是「通了」
+          curl -fsS --max-time 20 https://wb.hoarfrost.cloud/healthz | grep -q workbuddy2api && \
+            echo "OK: /healthz -> workbuddy2api" || \
+            echo "WARN: https://wb.hoarfrost.cloud/healthz 暂不可用（DNS/证书可能还没就绪）"
+          curl -sS --max-time 20 -o /dev/null -w "panel HTTP %{http_code}\n" \
+            https://wb.hoarfrost.cloud/panel/ || true
+          curl -sS --max-time 20 -o /dev/null -w "panel api (expect 401) HTTP %{http_code}\n" \
+            https://wb.hoarfrost.cloud/panel/api/overview || true

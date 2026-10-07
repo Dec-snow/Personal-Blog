@@ -416,7 +416,7 @@ body::after {
   border-color: rgba(255, 143, 171, 0.4);
 }
 
-/* —— 4 张卡片各自的封面色 + 项目代号 —— */
+/* —— 各卡片封面色 + 项目代号（新增项目时在这里补一条 p-xxx） —— */
 .project.p-quizcard .project-cover {
   --cover-bg: linear-gradient(135deg, #ffe1eb 0%, #d4d6ff 50%, #c5e8ff 100%);
 }
@@ -425,6 +425,9 @@ body::after {
 }
 .project.p-nebula .project-cover {
   --cover-bg: linear-gradient(135deg, #e8e0ff 0%, #d4e7ff 50%, #ffe1f0 100%);
+}
+.project.p-wb .project-cover {
+  --cover-bg: linear-gradient(135deg, #e6f0ff 0%, #d8ecff 45%, #e9e4ff 100%);
 }
 .project.p-soon-1 .project-cover {
   --cover-bg: linear-gradient(135deg, #f5f5f8 0%, #ebebef 100%);
@@ -1224,6 +1227,27 @@ body::after {
             <span>AI Agent</span>
           </div>
           <p>以 DAG 织就星河，让智能体在流转间自走。高并发编排，毫厘可控。</p>
+          <span class="arrow">
+            <span>访问站点</span>
+            <span class="tail">↗</span>
+          </span>
+        </div>
+      </a>
+
+      <a class="project p-real p-wb" href="https://wb.hoarfrost.cloud/" target="_blank" rel="noopener">
+        <div class="project-cover">
+          <span class="project-code">04</span>
+          <span class="project-tag"><span class="pulse"></span>ON LINE</span>
+        </div>
+        <div class="project-info">
+          <h3>WorkBuddy 网关</h3>
+          <div class="meta">
+            <span>Go</span>
+            <span>Docker</span>
+            <span>OpenAI API</span>
+            <span>SSE</span>
+          </div>
+          <p>把上游账号池收成一条 OpenAI 兼容接口，面板与网关同域，一钥可控。</p>
           <span class="arrow">
             <span>访问站点</span>
             <span class="tail">↗</span>
