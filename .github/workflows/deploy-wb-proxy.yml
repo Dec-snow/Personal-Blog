@@ -2,6 +2,10 @@ name: Deploy wb.hoarfrost.cloud proxy (workbuddy2api)
 
 run-name: wb.hoarfrost.cloud proxy ${{ github.sha }}
 
+# Touch this workflow file when a manual push-triggered rerun is needed.
+# Last rerun trigger: 2026-10-07 —— DNS A 记录（wb → 47.98.104.141）已生效，
+# 重跑以完成首次证书签发，并把 HTTP 引导块换成正式反代配置。
+
 # 把 workbuddy2api（服务器 127.0.0.1:7863）挂到 wb.hoarfrost.cloud：
 #   1) 装 HTTP 引导块 → 2) certbot webroot 签证书 → 3) 装最终反代配置 → 4) 健康检查
 # 幂等：重复运行只会重装配置，证书未到期时 certbot 自动跳过。
